@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golang From Hero To Hero - Membangun API Mini Toko Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .header.dark {
+            background: #1f2937;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: color 0.3s ease;
+        }
+
+        .logo.dark {
+            color: #f9fafb;
+        }
+
+        .logo-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .logo-subtitle.dark {
+            color: #9ca3af;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .font-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .theme-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .theme-toggle.dark {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-top: 80px;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            left: 0;
+            top: 80px;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            z-index: 1001;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chapter-list {
+            list-style: none;
+        }
+
+        .chapter-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .chapter-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 3px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .chapter-link:hover,
+        .chapter-link.active {
+            background: #3498db;
+            color: white;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            background: white;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .chapter-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .chapter-meta {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .content-body {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .content-body h1,
+        .content-body h2,
+        .content-body h3 {
+            color: #2c3e50;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .content-body h1 {
+            font-size: 1.8rem;
+        }
+
+        .content-body h2 {
+            font-size: 1.5rem;
+        }
+
+        .content-body h3 {
+            font-size: 1.3rem;
+        }
+
+        .content-body p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        .content-body blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        .content-body ul,
+        .content-body ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        .content-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        .content-body pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .content-body code {
+            background: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #e74c3c;
+        }
+
+        .content-body pre code {
+            background: none;
+            padding: 0;
+            color: #2c3e50;
+        }
+
+        .content-body a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .content-body a:hover {
+            text-decoration: underline;
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .nav-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #2980b9;
+        }
+
+        .nav-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: #3498db;
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .header-content {
+                padding: 0 1rem;
+            }
+
+            .chapter-title {
+                font-size: 1.5rem;
+            }
+
+            .content-body {
+                font-size: 1rem;
+            }
+
+            .navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-btn {
+                text-align: center;
+            }
+        }
+
+        /* Dark Mode Support */
+        body.dark-mode {
+            background-color: #111827;
+            color: #f9fafb;
+        }
+
+        body.dark-mode .header {
+            background: #1f2937;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        body.dark-mode .sidebar {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        body.dark-mode .content {
+            background: #111827;
+        }
+
+        body.dark-mode .content-header {
+            border-bottom-color: #374151;
+        }
+
+        body.dark-mode .chapter-title {
+            color: #f9fafb;
+        }
+
+        body.dark-mode .content-body h1,
+        body.dark-mode .content-body h2,
+        body.dark-mode .content-body h3 {
+            color: #f9fafb;
+        }
+
+        body.dark-mode .navigation {
+            border-top-color: #374151;
+        }
+
+        body.dark-mode .chapter-link {
+            color: #d1d5db;
+        }
+
+        body.dark-mode .chapter-link:hover,
+        body.dark-mode .chapter-link.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        body.dark-mode .content-body {
+            color: #e5e7eb;
+        }
+
+        body.dark-mode .content-body blockquote {
+            border-left-color: #3b82f6;
+            color: #d1d5db;
+        }
+
+        body.dark-mode .content-body pre {
+            background: #1f2937;
+            border-color: #374151;
+            color: #f9fafb;
+        }
+
+        body.dark-mode .content-body code {
+            background: #1f2937;
+            color: #fbbf24;
+        }
+
+        body.dark-mode .content-body pre code {
+            background: none;
+            color: #f9fafb;
+        }
+
+        body.dark-mode .content-body a {
+            color: #60a5fa;
+        }
+
+        body.dark-mode .nav-btn {
+            background: #3b82f6;
+        }
+
+        body.dark-mode .nav-btn:hover {
+            background: #2563eb;
+        }
+
+        body.dark-mode .nav-btn:disabled {
+            background: #6b7280;
+        }
+
+        /* Print Styles */
+        @media print {
+            .header,
+            .sidebar,
+            .navigation,
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 0;
+            }
+
+            .content-body {
+                font-size: 12pt;
+                line-height: 1.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo" id="logo">🚀 Golang From Hero To Hero</div>
+                <div class="logo-subtitle" id="logoSubtitle">Membangun API Mini Toko Online</div>
+            </div>
+            <div class="header-controls">
+                <div class="font-controls">
+                    <button class="btn btn-secondary" onclick="decreaseFont()">
+                        <span>A-</span>
+                    </button>
+                    <span id="fontSize" class="text-sm font-medium">16px</span>
+                    <button class="btn btn-secondary" onclick="increaseFont()">
+                        <span>A+</span>
+                    </button>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleDarkMode()">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeText">Dark</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <h3>Daftar Isi</h3>
+            <ul class="chapter-list" id="chapterList">
+                <!-- Chapters will be populated by JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="content" id="contentArea">
+            <!-- Content will be populated by JavaScript -->
+        </main>
+    </div>
+
+    <script>
+        // Chapter data structure - Easy to add new chapters
+        const chapters = [
+            {
+                id: 'chapter1',
+                title: 'Bab 1: Pengenalan',
+                meta: 'Halaman 1 dari 50 • Dibaca 8 menit',
+                content: `
+                    <h2>Selamat Datang di Tutorial API Mini Toko Online dengan Go</h2>
+                    <p>Dalam tutorial ini, kita akan belajar membuat API mini toko online menggunakan bahasa pemrograman Go. Go adalah bahasa pemrograman yang dikembangkan oleh Google yang terkenal dengan performa tinggi, kesederhanaan, dan kemudahan dalam pengembangan aplikasi web.</p>
+
+                    <h3>Apa yang Akan Kita Pelajari?</h3>
+                    <p>Sepanjang tutorial ini, kita akan membangun API toko online yang lengkap dengan fitur-fitur berikut:</p>
+
+                    <ul>
+                        <li><strong>Setup Project:</strong> Inisialisasi project dengan Go modules</li>
+                        <li><strong>HTTP Server:</strong> Membuat server HTTP dengan Go standard library</li>
+                        <li><strong>API Endpoints:</strong> Endpoint untuk CRUD operations (Create, Read, Update, Delete)</li>
+                        <li><strong>Database Integration:</strong> Koneksi dan operasi database</li>
+                        <li><strong>Middleware:</strong> Authentication, logging, dan error handling</li>
+                        <li><strong>Testing:</strong> Unit testing dan integration testing</li>
+                        <li><strong>Deployment:</strong> Cara deploy aplikasi ke production</li>
+                    </ul>
+
+                    <h3>Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda telah menginstall:</p>
+
+                    <ul>
+                        <li><strong>Go 1.19+</strong> - Download dari <a href="https://golang.org/dl/" target="_blank">golang.org</a></li>
+                        <li><strong>Git</strong> - Untuk version control</li>
+                        <li><strong>Text Editor/IDE</strong> - VS Code, GoLand, atau editor favorit Anda</li>
+                        <li><strong>Postman/Insomnia</strong> - Untuk testing API (opsional)</li>
+                    </ul>
+
+                    <h3>Tutorial Pertama: Install Go Modules</h3>
+                    <p>Langkah pertama dalam membuat API mini toko online adalah menginisialisasi project dengan Go modules. Go modules adalah sistem manajemen dependensi resmi untuk Go yang memungkinkan kita mengelola package dan versi dengan mudah.</p>
+
+                    <h4>Langkah 1: Buat Direktori Project</h4>
+                    <p>Buat direktori baru untuk project kita:</p>
+
+                    <pre><code>mkdir tokogo
+cd tokogo</code></pre>
+
+                    <h4>Langkah 2: Inisialisasi Go Module</h4>
+                    <p>Jalankan perintah berikut untuk menginisialisasi Go module:</p>
+
+                    <pre><code>go mod init tokogo</code></pre>
+
+                    <p>Perintah ini akan membuat file <code>go.mod</code> di direktori project. File ini berisi informasi tentang module kita, termasuk nama module dan versi Go yang digunakan.</p>
+
+                    <h4>Struktur File go.mod</h4>
+                    <p>Setelah menjalankan perintah di atas, Anda akan melihat file <code>go.mod</code> dengan isi seperti ini:</p>
+
+                    <pre><code>module tokogo
+
+go 1.25.1</code></pre>
+
+                    <p>File ini menunjukkan bahwa:</p>
+                    <ul>
+                        <li>Nama module kita adalah <code>tokogo</code></li>
+                        <li>Kita menggunakan Go versi 1.25.1</li>
+                    </ul>
+
+                    <h4>Langkah 3: Verifikasi Setup</h4>
+                    <p>Untuk memastikan setup berhasil, jalankan perintah berikut:</p>
+
+                    <pre><code>go version</code></pre>
+
+                    <p>Anda seharusnya melihat output yang menunjukkan versi Go yang terinstall.</p>
+
+                    <blockquote>
+                        <strong>Tips:</strong> Go modules memungkinkan kita untuk mengelola dependensi dengan mudah. Ketika kita mengimport package dari repository lain, Go akan otomatis menambahkannya ke file go.mod dan membuat file go.sum untuk verifikasi checksum.
+                    </blockquote>
+
+                    <h3>Langkah Selanjutnya</h3>
+                    <p>Sekarang kita telah berhasil menginisialisasi project dengan Go modules. Di bab selanjutnya, kita akan belajar tentang struktur project yang baik dan mulai membangun HTTP server pertama kita.</p>
+
+                    <p>Pastikan Anda telah memahami konsep Go modules sebelum melanjutkan ke bab berikutnya, karena ini adalah fondasi penting untuk pengembangan aplikasi Go modern.</p>
+                `
+            },
+            {
+                id: 'chapter2',
+                title: 'Bab 2: Install Dependency',
+                meta: 'Halaman 2 dari 50 • Dibaca 6 menit',
+                content: `
+                    <h2>Menginstall Dependencies untuk API Toko Online</h2>
+                    <p>Setelah berhasil menginisialisasi project dengan Go modules, langkah selanjutnya adalah menginstall dependencies (package) yang dibutuhkan untuk membangun API mini toko online. Dependencies ini akan membantu kita dalam berbagai aspek pengembangan, mulai dari HTTP server hingga database operations.</p>
+
+                    <h3>Dependencies yang Akan Kita Install</h3>
+                    <p>Berikut adalah daftar dependencies yang akan kita gunakan dalam project ini:</p>
+
+                    <ul>
+                        <li><strong>Gin Framework:</strong> HTTP web framework yang cepat dan ringan</li>
+                        <li><strong>GORM:</strong> Object-Relational Mapping library untuk Go</li>
+                        <li><strong>MySQL Driver:</strong> Driver untuk koneksi ke database MySQL</li>
+                        <li><strong>CORS Middleware:</strong> Untuk menangani Cross-Origin Resource Sharing</li>
+                        <li><strong>Godotenv:</strong> Untuk memuat environment variables dari file .env</li>
+                        <li><strong>JWT:</strong> Untuk implementasi JSON Web Token authentication</li>
+                    </ul>
+
+                    <h3>Langkah-langkah Instalasi</h3>
+                    <p>Jalankan perintah-perintah berikut satu per satu di terminal dalam direktori project <code>tokogo</code>:</p>
+
+                    <h4>1. Install Gin Framework</h4>
+                    <p>Gin adalah HTTP web framework yang sangat populer di Go karena performanya yang tinggi dan kemudahan penggunaannya.</p>
+                    <pre><code>go get -u github.com/gin-gonic/gin</code></pre>
+
+                    <h4>2. Install GORM</h4>
+                    <p>GORM adalah ORM library yang powerful untuk Go, memudahkan kita dalam berinteraksi dengan database.</p>
+                    <pre><code>go get -u gorm.io/gorm</code></pre>
+
+                    <h4>3. Install MySQL Driver untuk GORM</h4>
+                    <p>Driver ini diperlukan untuk koneksi ke database MySQL.</p>
+                    <pre><code>go get -u gorm.io/driver/mysql</code></pre>
+
+                    <h4>4. Install CORS Middleware</h4>
+                    <p>CORS middleware diperlukan untuk menangani request dari frontend yang berbeda domain.</p>
+                    <pre><code>go get -u github.com/gin-contrib/cors</code></pre>
+
+                    <h4>5. Install Godotenv</h4>
+                    <p>Godotenv membantu kita memuat environment variables dari file .env untuk konfigurasi aplikasi.</p>
+                    <pre><code>go get -u github.com/joho/godotenv</code></pre>
+
+                    <h4>6. Install JWT Library</h4>
+                    <p>JWT library untuk implementasi authentication dan authorization.</p>
+                    <pre><code>go get github.com/golang-jwt/jwt</code></pre>
+
+                    <h4>7. Install Validator Library</h4>
+                    <p>Validator library untuk validasi input data dengan binding tags.</p>
+                    <pre><code>go get github.com/go-playground/validator/v10@v10.26.0</code></pre>
+
+                    <h3>Verifikasi Instalasi</h3>
+                    <p>Setelah menjalankan semua perintah di atas, periksa file <code>go.mod</code> untuk memastikan semua dependencies telah terinstall:</p>
+
+                    <pre><code>cat go.mod</code></pre>
+
+                    <p>File <code>go.mod</code> Anda seharusnya terlihat seperti ini:</p>
+
+                    <pre><code>module tokogo
+
+go 1.25.1
+
+require (
+    github.com/gin-contrib/cors v1.4.0
+    github.com/gin-gonic/gin v1.9.1
+    github.com/go-playground/validator/v10 v10.26.0
+    github.com/golang-jwt/jwt v3.2.2+incompatible
+    github.com/joho/godotenv v1.4.0
+    gorm.io/driver/mysql v1.5.1
+    gorm.io/gorm v1.25.2
+)</code></pre>
+
+                    <h3>Penjelasan Setiap Dependency</h3>
+
+                    <h4>🔧 Gin Framework</h4>
+                    <p><strong>Fungsi:</strong> HTTP web framework yang menyediakan routing, middleware, dan fitur-fitur web development lainnya.</p>
+                    <p><strong>Keunggulan:</strong> Performa tinggi, sintaks yang sederhana, dan ekosistem yang luas.</p>
+
+                    <h4>🗄️ GORM</h4>
+                    <p><strong>Fungsi:</strong> Object-Relational Mapping yang memudahkan operasi database dengan sintaks Go yang natural.</p>
+                    <p><strong>Keunggulan:</strong> Auto-migration, associations, hooks, dan dukungan untuk berbagai database.</p>
+
+                    <h4>🐬 MySQL Driver</h4>
+                    <p><strong>Fungsi:</strong> Driver resmi untuk koneksi ke database MySQL melalui GORM.</p>
+                    <p><strong>Keunggulan:</strong> Optimized untuk performa dan kompatibilitas dengan MySQL.</p>
+
+                    <h4>🌐 CORS Middleware</h4>
+                    <p><strong>Fungsi:</strong> Menangani Cross-Origin Resource Sharing untuk komunikasi dengan frontend.</p>
+                    <p><strong>Keunggulan:</strong> Konfigurasi yang fleksibel dan mudah digunakan.</p>
+
+                    <h4>⚙️ Godotenv</h4>
+                    <p><strong>Fungsi:</strong> Memuat environment variables dari file .env untuk konfigurasi aplikasi.</p>
+                    <p><strong>Keunggulan:</strong> Memisahkan konfigurasi dari kode, meningkatkan keamanan.</p>
+
+                    <h4>🔐 JWT Library</h4>
+                    <p><strong>Fungsi:</strong> Implementasi JSON Web Token untuk authentication dan authorization.</p>
+                    <p><strong>Keunggulan:</strong> Stateless authentication, aman, dan mudah diimplementasikan.</p>
+
+                    <h4>✅ Validator Library</h4>
+                    <p><strong>Fungsi:</strong> Library untuk validasi input data dengan binding tags yang powerful.</p>
+                    <p><strong>Keunggulan:</strong> Validasi otomatis, fleksibel, dan terintegrasi dengan Gin framework.</p>
+
+                    <blockquote>
+                        <strong>Tips:</strong> Gunakan flag <code>-u</code> pada perintah <code>go get</code> untuk mengupdate ke versi terbaru dari dependencies yang sudah ada. Ini memastikan kita menggunakan versi yang paling up-to-date dan aman.
+                    </blockquote>
+
+                    <h3>File go.sum</h3>
+                    <p>Setelah instalasi, Go akan otomatis membuat file <code>go.sum</code> yang berisi checksum untuk verifikasi integritas dependencies. File ini penting untuk memastikan konsistensi dependencies di berbagai environment.</p>
+
+                    <h3>Langkah Selanjutnya</h3>
+                    <p>Sekarang kita telah berhasil menginstall semua dependencies yang dibutuhkan. Di bab selanjutnya, kita akan belajar tentang struktur project yang baik dan mulai membuat file-file dasar untuk aplikasi kita.</p>
+
+                    <p>Pastikan semua dependencies terinstall dengan benar sebelum melanjutkan ke bab berikutnya, karena kita akan menggunakan semua package ini dalam pengembangan API.</p>
+                `
+            },
+            {
+                id: 'chapter3',
+                title: 'Bab 3: Struktur Folder',
+                meta: 'Halaman 3 dari 50 • Dibaca 7 menit',
+                content: `
+                    <h2>Struktur Folder Project API Toko Online</h2>
+                    <p>Setelah berhasil menginstall dependencies, langkah selanjutnya adalah membuat struktur folder yang baik dan terorganisir. Struktur folder yang rapi akan memudahkan pengembangan, maintenance, dan kolaborasi dalam tim.</p>
+
+                    <h3>Struktur Folder yang Akan Kita Buat</h3>
+                    <p>Berikut adalah struktur folder yang akan kita gunakan untuk project API mini toko online. <strong>File-file yang ditampilkan hanya sebagai contoh dan gambaran</strong> - yang penting adalah memahami struktur foldernya saja:</p>
+
+                    <pre><code>tokogo/
+├── config/
+│   └── config.go
+├── handlers/
+│   ├── auth.go
+│   ├── product.go
+│   └── user.go
+├── helpers/
+│   ├── jwt.go
+│   ├── response.go
+│   └── validator.go
+├── middlewares/
+│   ├── auth.go
+│   ├── cors.go
+│   └── logger.go
+├── models/
+│   ├── product.go
+│   └── user.go
+├── repositories/
+│   ├── product.go
+│   └── user.go
+├── requests/
+│   ├── auth_request.go
+│   ├── product_request.go
+│   └── user_request.go
+├── responses/
+│   ├── auth_response.go
+│   ├── product_response.go
+│   └── user_response.go
+├── services/
+│   ├── auth.go
+│   ├── product.go
+│   └── user.go
+├── main.go
+├── .env
+├── .gitignore
+├── go.mod
+├── go.sum
+└── README.md</code></pre>
+
+                    <h3>Penjelasan Setiap Folder</h3>
+                    <p><em>Catatan: Nama file yang disebutkan di bawah ini hanya sebagai contoh. Yang penting adalah memahami fungsi setiap folder.</em></p>
+
+                    <h4>📁 config/</h4>
+                    <p><strong>Fungsi:</strong> Berisi konfigurasi aplikasi dan environment variables</p>
+                    <p><strong>Contoh file:</strong> <code>config.go</code> - Load dan manage konfigurasi dari .env</p>
+
+                    <h4>📁 handlers/</h4>
+                    <p><strong>Fungsi:</strong> HTTP handlers (controllers) yang menangani request dari client</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>auth.go</code> - Handler untuk authentication (login, register)</li>
+                        <li><code>product.go</code> - Handler untuk CRUD produk</li>
+                        <li><code>user.go</code> - Handler untuk manajemen user</li>
+                    </ul>
+
+                    <h4>📁 helpers/</h4>
+                    <p><strong>Fungsi:</strong> Utility functions dan helper yang bisa digunakan di seluruh aplikasi</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>jwt.go</code> - JWT token generation dan validation</li>
+                        <li><code>response.go</code> - Standard response format</li>
+                        <li><code>validator.go</code> - Custom validation functions</li>
+                    </ul>
+
+                    <h4>📁 middlewares/</h4>
+                    <p><strong>Fungsi:</strong> Middleware functions untuk intercept request/response</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>auth.go</code> - Authentication middleware</li>
+                        <li><code>cors.go</code> - CORS configuration</li>
+                        <li><code>logger.go</code> - Request logging</li>
+                    </ul>
+
+                    <h4>📁 models/</h4>
+                    <p><strong>Fungsi:</strong> Data models/structs yang merepresentasikan database tables</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>product.go</code> - Product model struct</li>
+                        <li><code>user.go</code> - User model struct</li>
+                    </ul>
+
+                    <h4>📁 repositories/</h4>
+                    <p><strong>Fungsi:</strong> Data access layer untuk berinteraksi dengan database</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>product.go</code> - Product database operations</li>
+                        <li><code>user.go</code> - User database operations</li>
+                    </ul>
+
+                    <h4>📁 requests/</h4>
+                    <p><strong>Fungsi:</strong> Request structs untuk validasi input dari client</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>auth_request.go</code> - Login/Register request structs</li>
+                        <li><code>product_request.go</code> - Product CRUD request structs</li>
+                        <li><code>user_request.go</code> - User management request structs</li>
+                    </ul>
+
+                    <h4>📁 responses/</h4>
+                    <p><strong>Fungsi:</strong> Response structs untuk format output yang konsisten</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>auth_response.go</code> - Authentication response structs</li>
+                        <li><code>product_response.go</code> - Product response structs</li>
+                        <li><code>user_response.go</code> - User response structs</li>
+                    </ul>
+
+                    <h4>📁 services/</h4>
+                    <p><strong>Fungsi:</strong> Business logic layer yang mengatur alur aplikasi</p>
+                    <p><strong>Contoh file:</strong></p>
+                    <ul>
+                        <li><code>auth.go</code> - Authentication business logic</li>
+                        <li><code>product.go</code> - Product business logic</li>
+                        <li><code>user.go</code> - User business logic</li>
+                    </ul>
+
+                    <h4>📄 main.go</h4>
+                    <p><strong>Fungsi:</strong> Entry point aplikasi yang menjalankan HTTP server</p>
+                    <p><strong>Isi:</strong> Server setup, route configuration, dan middleware setup</p>
+
+                    <h3>Langkah-langkah Membuat Struktur Folder</h3>
+
+                    <h4>1. Buat Folder Utama</h4>
+                    <p>Pastikan Anda sudah berada di direktori project <code>tokogo</code>:</p>
+                    <pre><code>pwd
+# Output: /path/to/your/project/tokogo</code></pre>
+
+                    <h4>2. Buat Struktur Folder</h4>
+                    <p>Jalankan perintah berikut untuk membuat semua folder sekaligus:</p>
+                    <pre><code>mkdir -p config
+mkdir -p handlers
+mkdir -p helpers
+mkdir -p middlewares
+mkdir -p models
+mkdir -p repositories
+mkdir -p requests
+mkdir -p responses
+mkdir -p services</code></pre>
+
+                    <h4>3. Verifikasi Struktur</h4>
+                    <p>Gunakan command <code>tree</code> untuk melihat struktur folder:</p>
+                    <pre><code>tree -d</code></pre>
+
+                    <p>Jika <code>tree</code> tidak tersedia, gunakan:</p>
+                    <pre><code>find . -type d | sort</code></pre>
+
+                    <h3>File-file Konfigurasi</h3>
+
+                    <h4>.env</h4>
+                    <p>File untuk menyimpan environment variables:</p>
+                    <pre><code># Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=tokogo
+
+# Server Configuration
+SERVER_PORT=8080
+JWT_SECRET=your-secret-key
+
+# Environment
+ENV=development</code></pre>
+
+                    <h4>.gitignore</h4>
+                    <p>File untuk mengabaikan file tertentu dari Git:</p>
+                    <pre><code># Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with \`go test -c\`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db</code></pre>
+
+                    <h3>Arsitektur Pattern yang Digunakan</h3>
+
+                    <h4>🏗️ Layered Architecture</h4>
+                    <p>Struktur ini mengikuti prinsip Layered Architecture dengan pemisahan layer yang jelas:</p>
+                    <ul>
+                        <li><strong>Handlers:</strong> Layer presentasi (HTTP requests/responses)</li>
+                        <li><strong>Services:</strong> Layer business logic</li>
+                        <li><strong>Repositories:</strong> Layer data access</li>
+                        <li><strong>Models:</strong> Data structures</li>
+                        <li><strong>Requests/Responses:</strong> Data transfer objects</li>
+                        <li><strong>Helpers:</strong> Utility functions</li>
+                        <li><strong>Middlewares:</strong> Cross-cutting concerns</li>
+                    </ul>
+
+                    <h4>🔄 Dependency Flow</h4>
+                    <p>Alur dependency mengalir dari luar ke dalam:</p>
+                    <pre><code>Handlers → Services → Repositories → Database
+    ↓         ↓         ↓
+Requests  Responses  Models</code></pre>
+
+                    <h4>📋 Request/Response Pattern</h4>
+                    <p>Struktur ini menggunakan pattern Request/Response yang memisahkan:</p>
+                    <ul>
+                        <li><strong>Requests:</strong> Input validation dan data binding</li>
+                        <li><strong>Responses:</strong> Output formatting dan serialization</li>
+                        <li><strong>Models:</strong> Database entities</li>
+                    </ul>
+
+                    <blockquote>
+                        <strong>Tips:</strong> Struktur folder ini mengikuti standar Go project layout yang direkomendasikan oleh komunitas Go. Ini akan memudahkan developer lain untuk memahami dan berkontribusi pada project.
+                    </blockquote>
+
+                    <h3>Langkah Selanjutnya</h3>
+                    <p>Sekarang kita telah berhasil membuat struktur folder yang rapi dan terorganisir. Di bab selanjutnya, kita akan mulai membuat file-file dasar dan mengimplementasikan HTTP server pertama kita menggunakan Gin framework.</p>
+
+                    <p><strong>Catatan Penting:</strong> File-file yang akan kita buat di bab selanjutnya mungkin memiliki nama atau struktur yang berbeda dengan contoh di atas. Yang penting adalah memahami konsep dan fungsi setiap folder. Struktur folder yang kita buat ini akan menjadi fondasi untuk pengembangan selanjutnya.</p>
+                `
+            },
+            {
+                id: 'chapter4',
+                title: 'Bab 4: Konfigurasi Kode',
+                meta: 'Halaman 4 dari 50 • Dibaca 8 menit',
+                content: `
+                    <h2>Konfigurasi Kode dan Environment Variables</h2>
+                    <p>Setelah membuat struktur folder, langkah selanjutnya adalah membuat file-file konfigurasi yang akan mengatur environment variables dan koneksi database. Konfigurasi yang baik akan memudahkan deployment dan maintenance aplikasi.</p>
+
+                    <h3>Langkah-langkah yang Akan Kita Lakukan</h3>
+                    <p>Sebelum membuat file konfigurasi, kita perlu memastikan database MySQL sudah siap. Berikut urutan yang akan kita lakukan:</p>
+                    <ol>
+                        <li><strong>Setup Database MySQL</strong> - Membuat database dan user</li>
+                        <li><strong>File .env</strong> - Environment variables</li>
+                        <li><strong>config/env.go</strong> - Helper function untuk membaca environment variables</li>
+                        <li><strong>config/database.go</strong> - Konfigurasi koneksi database</li>
+                    </ol>
+
+                    <h3>1. Setup Database MySQL</h3>
+                    <p>Sebelum membuat konfigurasi, kita perlu memastikan database MySQL sudah berjalan dan database 'tokogo' sudah dibuat. Ada 2 cara yang bisa digunakan:</p>
+
+                    <h4>🔧 Cara 1: Menggunakan Command Line (CMD/Terminal)</h4>
+                    <p>Jika Anda sudah familiar dengan command line, cara ini lebih cepat:</p>
+
+                    <h5>Langkah 1: Buka MySQL Command Line</h5>
+                    <p>Buka Command Prompt atau Terminal, lalu login ke MySQL:</p>
+                    <pre><code>mysql -u root -p</code></pre>
+                    <p>Masukkan password MySQL Anda (jika ada). Jika tidak ada password, langsung tekan Enter.</p>
+
+                    <h5>Langkah 2: Buat Database</h5>
+                    <p>Setelah berhasil login, buat database 'tokogo':</p>
+                    <pre><code>CREATE DATABASE tokogo;</code></pre>
+
+                    <h5>Langkah 3: Verifikasi Database</h5>
+                    <p>Pastikan database berhasil dibuat:</p>
+                    <pre><code>SHOW DATABASES;</code></pre>
+                    <p>Anda seharusnya melihat 'tokogo' dalam daftar database.</p>
+
+                    <h5>Langkah 4: Keluar dari MySQL</h5>
+                    <pre><code>EXIT;</code></pre>
+
+                    <h4>🌐 Cara 2: Menggunakan phpMyAdmin (Lebih Mudah untuk Pemula)</h4>
+                    <p>Jika Anda menggunakan XAMPP, WAMP, atau Laragon, cara ini lebih mudah:</p>
+
+                    <h5>Langkah 1: Buka phpMyAdmin</h5>
+                    <p>Buka browser dan akses: <code>http://localhost/phpmyadmin</code></p>
+
+                    <h5>Langkah 2: Buat Database Baru</h5>
+                    <p>Klik tab "Databases" di bagian atas, lalu:</p>
+                    <ol>
+                        <li>Masukkan nama database: <code>tokogo</code></li>
+                        <li>Pilih Collation: <code>utf8mb4_unicode_ci</code> (opsional)</li>
+                        <li>Klik tombol "Create"</li>
+                    </ol>
+
+                    <h5>Langkah 3: Verifikasi</h5>
+                    <p>Database 'tokogo' akan muncul di sidebar kiri, klik untuk memastikan database kosong dan siap digunakan.</p>
+
+                    <h4>⚠️ Troubleshooting</h4>
+                    <p>Jika mengalami masalah:</p>
+                    <ul>
+                        <li><strong>MySQL tidak berjalan:</strong> Pastikan XAMPP/WAMP/Laragon sudah di-start</li>
+                        <li><strong>Access denied:</strong> Coba tanpa password atau reset password MySQL</li>
+                        <li><strong>Database sudah ada:</strong> Tidak masalah, bisa langsung digunakan</li>
+                    </ul>
+
+                    <blockquote>
+                        <strong>Tips untuk Pemula:</strong> Jika Anda baru belajar, gunakan phpMyAdmin karena lebih visual dan mudah. Command line bisa dipelajari nanti setelah familiar dengan database.
+                    </blockquote>
+
+                    <h3>2. Membuat File .env</h3>
+                    <p>File .env berisi environment variables yang akan digunakan oleh aplikasi. Buat file ini di root directory project:</p>
+
+                    <pre><code># Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=tokogo
+
+# Server Configuration
+SERVER_PORT=8080
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Environment
+ENV=development</code></pre>
+
+                    <h4>Penjelasan Environment Variables:</h4>
+                    <ul>
+                        <li><strong>DB_HOST:</strong> Host database (localhost untuk development)</li>
+                        <li><strong>DB_PORT:</strong> Port database MySQL (default 3306)</li>
+                        <li><strong>DB_USER:</strong> Username database</li>
+                        <li><strong>DB_PASSWORD:</strong> Password database (kosong jika tidak ada)</li>
+                        <li><strong>DB_NAME:</strong> Nama database yang akan digunakan</li>
+                        <li><strong>SERVER_PORT:</strong> Port untuk HTTP server</li>
+                        <li><strong>JWT_SECRET:</strong> Secret key untuk JWT token (ganti dengan key yang aman)</li>
+                        <li><strong>ENV:</strong> Environment aplikasi (development/production)</li>
+                    </ul>
+
+                    <h3>3. Membuat File config/env.go</h3>
+                    <p>File ini berisi helper function untuk membaca environment variables dengan default value:</p>
+
+                    <pre><code>package config
+
+import "os"
+
+func GetEnv(key, defaultVal string) string {
+    if value, exists := os.LookupEnv(key); exists && value != "" {
+        return value
+    }
+    return defaultVal
+}</code></pre>
+
+                    <h4>Penjelasan Function GetEnv:</h4>
+                    <ul>
+                        <li><strong>Parameter key:</strong> Nama environment variable</li>
+                        <li><strong>Parameter defaultVal:</strong> Nilai default jika environment variable tidak ditemukan</li>
+                        <li><strong>Return:</strong> Nilai environment variable atau default value</li>
+                    </ul>
+
+                    <h3>4. Membuat File config/database.go</h3>
+                    <p>File ini berisi konfigurasi koneksi database menggunakan GORM:</p>
+
+                    <pre><code>package config
+
+import (
+    "fmt"
+    "time"
+
+    "tokogo/models"
+
+    "gorm.io/driver/mysql"
+    "gorm.io/gorm"
+    "gorm.io/gorm/schema"
+)
+
+var DB *gorm.DB
+
+func InitDB() {
+    // Ambil konfigurasi database dari environment variables
+    dbUser := GetEnv("DB_USER", "root")
+    dbPassword := GetEnv("DB_PASSWORD", "")
+    dbHost := GetEnv("DB_HOST", "localhost")
+    dbPort := GetEnv("DB_PORT", "3306")
+    dbName := GetEnv("DB_NAME", "tokogo")
+
+    // Buat DSN (Data Source Name) untuk koneksi MySQL
+    dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+        dbUser, dbPassword, dbHost, dbPort, dbName)
+
+    var err error
+
+    // Buka koneksi database menggunakan GORM
+    DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+        NamingStrategy: schema.NamingStrategy{
+            SingularTable: true, // Gunakan nama table singular
+        },
+    })
+    if err != nil {
+        panic(fmt.Sprintf("Failed to connect to database: %v", err))
+    }
+
+    // Konfigurasi connection pool
+    sqlDB, err := DB.DB()
+    if err != nil {
+        panic("Failed to get database instance!")
+    }
+
+    // Set connection pool settings
+    sqlDB.SetMaxOpenConns(10)    // Maksimal 10 koneksi terbuka
+    sqlDB.SetMaxIdleConns(5)     // Maksimal 5 koneksi idle
+    sqlDB.SetConnMaxLifetime(time.Hour) // Maksimal 1 jam lifetime
+
+    // Auto migrate model User (akan kita buat di bab selanjutnya)
+    if err := DB.AutoMigrate(&models.User{}); err != nil {
+        panic(fmt.Sprintf("AutoMigrate failed: %v", err))
+    }
+}</code></pre>
+
+                    <h4>Penjelasan Konfigurasi Database:</h4>
+                    <ul>
+                        <li><strong>DSN:</strong> Data Source Name untuk koneksi MySQL</li>
+                        <li><strong>SingularTable:</strong> Menggunakan nama table singular (user bukan users)</li>
+                        <li><strong>Connection Pool:</strong> Mengatur jumlah koneksi maksimal</li>
+                        <li><strong>AutoMigrate:</strong> Otomatis membuat/update table berdasarkan model</li>
+                    </ul>
+
+                    <h3>5. Membuat File .gitignore</h3>
+                    <p>Pastikan file .env tidak di-commit ke Git untuk keamanan:</p>
+
+                    <pre><code># Environment variables
+.env
+.env.local
+.env.production
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Go workspace file
+go.work
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db</code></pre>
+
+                    <h3>6. Load Environment Variables di main.go</h3>
+                    <p>Untuk menggunakan godotenv, kita perlu memuat file .env di awal aplikasi:</p>
+
+                    <pre><code>package main
+
+import (
+    "log"
+
+    "github.com/joho/godotenv"
+    "tokogo/config"
+)
+
+func main() {
+    // Load environment variables dari file .env
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using system environment variables")
+    }
+
+    // Initialize database connection
+    config.InitDB()
+    
+    // Rest of your application code...
+}</code></pre>
+
+                    <h3>Keunggulan Konfigurasi Ini</h3>
+
+                    <h4>🔒 Keamanan</h4>
+                    <ul>
+                        <li>Environment variables tidak di-commit ke Git</li>
+                        <li>Konfigurasi berbeda untuk development dan production</li>
+                        <li>Secret keys tidak ter-expose di kode</li>
+                    </ul>
+
+                    <h4>⚙️ Fleksibilitas</h4>
+                    <ul>
+                        <li>Mudah mengubah konfigurasi tanpa mengubah kode</li>
+                        <li>Default values untuk development</li>
+                        <li>Support multiple environments</li>
+                    </ul>
+
+                    <h4>🚀 Deployment</h4>
+                    <ul>
+                        <li>Mudah deploy ke server dengan environment variables</li>
+                        <li>Konfigurasi database yang optimal</li>
+                        <li>Connection pooling untuk performa</li>
+                    </ul>
+
+                    <blockquote>
+                        <strong>Tips:</strong> Selalu gunakan environment variables untuk konfigurasi yang sensitif seperti database credentials dan JWT secret. Jangan pernah hardcode nilai-nilai ini di kode.
+                    </blockquote>
+
+                    <h3>7. Verifikasi Setup Database</h3>
+                    <p>Setelah membuat semua file konfigurasi, mari kita verifikasi bahwa setup database sudah benar:</p>
+
+                    <h4>✅ Checklist Verifikasi:</h4>
+                    <ul>
+                        <li>✅ MySQL server sudah berjalan (XAMPP/WAMP/Laragon sudah di-start)</li>
+                        <li>✅ Database 'tokogo' sudah dibuat</li>
+                        <li>✅ File .env sudah dibuat dengan konfigurasi yang benar</li>
+                        <li>✅ File config/env.go sudah dibuat</li>
+                        <li>✅ File config/database.go sudah dibuat</li>
+                        <li>✅ File .gitignore sudah dibuat</li>
+                    </ul>
+
+                    <h4>🧪 Test Koneksi Database (Opsional)</h4>
+                    <p>Jika ingin memastikan koneksi database berfungsi, buat file test sederhana:</p>
+
+                    <pre><code>package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/joho/godotenv"
+    "tokogo/config"
+)
+
+func main() {
+    // Load environment variables
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using system environment variables")
+    }
+
+    // Test database connection
+    fmt.Println("Testing database connection...")
+    config.InitDB()
+    fmt.Println("✅ Database connection successful!")
+}</code></pre>
+
+                    <p>Jalankan dengan: <code>go run main.go</code></p>
+
+                    <h3>Langkah Selanjutnya</h3>
+                    <p>Sekarang kita telah berhasil membuat konfigurasi dasar untuk aplikasi. Di bab selanjutnya, kita akan membuat model User dan mulai mengimplementasikan HTTP server dengan Gin framework.</p>
+
+                    <p><strong>Catatan Penting:</strong> Pastikan semua checklist di atas sudah terpenuhi sebelum melanjutkan ke bab selanjutnya. Jika ada error saat test koneksi database, periksa kembali konfigurasi MySQL dan file .env Anda.</p>
+                `
+            },
+            {
+                id: 'chapter5',
+                title: 'Bab 5: Relaksasi & Review',
+                meta: 'Halaman 5 dari 50 • Dibaca 12 menit',
+                content: `
+                    <h2>🛋️ Bab Relaksasi & Review Pembelajaran</h2>
+                    <p>Selamat! Anda telah menyelesaikan 4 bab pertama dari tutorial API Mini Toko Online dengan Go. Sekarang saatnya untuk beristirahat sejenak dan mengulas kembali semua yang telah dipelajari. Bab ini dirancang untuk membantu otak Anda mengkonsolidasikan pengetahuan yang baru saja diperoleh.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🧠 Mengapa Review Penting?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Penelitian menunjukkan bahwa mengulang materi dalam 24 jam pertama dapat meningkatkan retensi memori hingga 80%. Mari kita manfaatkan momen ini untuk memperkuat pemahaman Anda!</p>
+                    </div>
+
+                    <h3>📚 Ringkasan Pembelajaran Bab 1-4</h3>
+                    <p>Sebelum masuk ke pertanyaan review, mari kita ingat kembali perjalanan pembelajaran yang telah kita lalui:</p>
+
+                    <h4>🎯 Bab 1: Pengenalan Go Modules</h4>
+                    <ul>
+                        <li>✅ Memahami konsep Go modules dan manajemen dependensi</li>
+                        <li>✅ Inisialisasi project dengan <code>go mod init tokogo</code></li>
+                        <li>✅ Struktur file <code>go.mod</code> dan <code>go.sum</code></li>
+                        <li>✅ Prasyarat pengembangan Go (Go 1.19+, Git, IDE)</li>
+                    </ul>
+
+                    <h4>📦 Bab 2: Install Dependencies</h4>
+                    <ul>
+                        <li>✅ Gin Framework untuk HTTP web framework</li>
+                        <li>✅ GORM untuk Object-Relational Mapping</li>
+                        <li>✅ MySQL Driver untuk koneksi database</li>
+                        <li>✅ CORS Middleware untuk Cross-Origin Resource Sharing</li>
+                        <li>✅ Godotenv untuk environment variables</li>
+                        <li>✅ JWT Library untuk authentication</li>
+                    </ul>
+
+                    <h4>🏗️ Bab 3: Struktur Folder</h4>
+                    <ul>
+                        <li>✅ Layered Architecture pattern</li>
+                        <li>✅ Pemisahan concerns (handlers, services, repositories)</li>
+                        <li>✅ Request/Response pattern</li>
+                        <li>✅ Dependency flow yang jelas</li>
+                        <li>✅ Struktur folder yang scalable</li>
+                    </ul>
+
+                    <h4>⚙️ Bab 4: Konfigurasi Kode</h4>
+                    <ul>
+                        <li>✅ Setup database MySQL</li>
+                        <li>✅ Environment variables dengan file .env</li>
+                        <li>✅ Konfigurasi koneksi database dengan GORM</li>
+                        <li>✅ Connection pooling untuk performa</li>
+                        <li>✅ Auto-migration untuk database schema</li>
+                    </ul>
+
+                    <h3>🤔 Pertanyaan Review Interaktif</h3>
+                    <p>Mari kita uji pemahaman Anda dengan pertanyaan-pertanyaan yang dirancang untuk mengaktifkan kembali memori dan memperkuat pembelajaran:</p>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #3498db; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>📝 Bagian A: Konsep Dasar Go Modules</h4>
+                        
+                        <p><strong>1. Apa fungsi utama dari file go.mod dalam project Go?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Pikirkan tentang manajemen dependensi dan versi...</p>
+                        
+                        <p><strong>2. Mengapa kita menggunakan flag -u pada perintah go get?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Apa yang terjadi jika kita tidak menggunakan flag ini?</p>
+                        
+                        <p><strong>3. Apa perbedaan antara go.mod dan go.sum?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Satu untuk metadata, satu untuk keamanan...</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #e74c3c; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>🔧 Bagian B: Dependencies & Framework</h4>
+                        
+                        <p><strong>4. Mengapa kita memilih Gin Framework dibanding HTTP server bawaan Go?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Pikirkan tentang routing, middleware, dan kemudahan...</p>
+                        
+                        <p><strong>5. Apa keunggulan GORM dibanding menulis SQL query manual?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Auto-migration, associations, hooks...</p>
+                        
+                        <p><strong>6. Kapan kita membutuhkan CORS middleware?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Frontend dan backend di domain berbeda...</p>
+                        
+                        <p><strong>7. Mengapa JWT lebih baik dari session-based authentication untuk API?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Stateless, scalable, cross-domain...</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #f39c12; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>🏗️ Bagian C: Arsitektur & Struktur</h4>
+                        
+                        <p><strong>8. Jelaskan alur dependency flow dalam arsitektur yang kita buat!</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Handlers → Services → Repositories → Database</p>
+                        
+                        <p><strong>9. Mengapa kita memisahkan requests dan responses dari models?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Validasi input, format output, keamanan...</p>
+                        
+                        <p><strong>10. Apa fungsi dari folder helpers dan middlewares?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Satu untuk utility, satu untuk intercept...</p>
+                        
+                        <p><strong>11. Bagaimana Layered Architecture membantu dalam maintenance code?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Separation of concerns, testability...</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #27ae60; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>⚙️ Bagian D: Konfigurasi & Database</h4>
+                        
+                        <p><strong>12. Mengapa kita menggunakan environment variables untuk konfigurasi?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Keamanan, fleksibilitas, deployment...</p>
+                        
+                        <p><strong>13. Apa fungsi dari connection pooling dalam database?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Performa, resource management...</p>
+                        
+                        <p><strong>14. Mengapa kita menggunakan AutoMigrate di GORM?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Schema management, development speed...</p>
+                        
+                        <p><strong>15. Apa yang terjadi jika file .env tidak ditemukan saat aplikasi berjalan?</strong></p>
+                        <p style="color: #666; font-style: italic;">💡 Petunjuk: Fallback ke system environment variables...</p>
+                    </div>
+
+                    <h3>🎯 Latihan Praktis</h3>
+                    <p>Sekarang mari kita praktikkan dengan beberapa latihan yang akan memperkuat pemahaman Anda:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>💻 Latihan 1: Membuat Project Baru</h4>
+                        <p><strong>Tantangan:</strong> Buat project Go baru dengan nama "my-shop-api" dan install minimal 3 dependencies yang berbeda dari yang sudah kita pelajari.</p>
+                        <p><strong>Langkah:</strong></p>
+                        <ol>
+                            <li>Buat direktori baru</li>
+                            <li>Inisialisasi Go module</li>
+                            <li>Install 3 dependencies baru (bisa dari <a href="https://pkg.go.dev/" target="_blank">pkg.go.dev</a>)</li>
+                            <li>Verifikasi file go.mod dan go.sum</li>
+                        </ol>
+                    </div>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>🏗️ Latihan 2: Merancang Struktur Folder</h4>
+                        <p><strong>Tantangan:</strong> Rancang struktur folder untuk aplikasi "blog-api" yang memiliki fitur artikel, komentar, dan user management.</p>
+                        <p><strong>Pertimbangkan:</strong></p>
+                        <ul>
+                            <li>Berapa banyak folder yang dibutuhkan?</li>
+                            <li>Bagaimana dependency flow-nya?</li>
+                            <li>File apa saja yang ada di setiap folder?</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>⚙️ Latihan 3: Konfigurasi Environment</h4>
+                        <p><strong>Tantangan:</strong> Buat file .env untuk aplikasi production dengan konfigurasi yang aman.</p>
+                        <p><strong>Include:</strong></p>
+                        <ul>
+                            <li>Database configuration (production)</li>
+                            <li>Server configuration</li>
+                            <li>Security keys</li>
+                            <li>External API keys</li>
+                        </ul>
+                    </div>
+
+                    <h3>🧠 Teknik Memori untuk Developer</h3>
+                    <p>Sebagai bonus, berikut beberapa teknik yang bisa membantu Anda mengingat konsep-konsep programming:</p>
+
+                    <h4>🔗 Association Technique</h4>
+                    <p>Hubungkan konsep baru dengan yang sudah familiar:</p>
+                    <ul>
+                        <li><strong>Go Modules</strong> → seperti <strong>package.json</strong> di Node.js</li>
+                        <li><strong>GORM</strong> → seperti <strong>Eloquent</strong> di Laravel</li>
+                        <li><strong>Gin Framework</strong> → seperti <strong>Express.js</strong> di Node.js</li>
+                        <li><strong>Environment Variables</strong> → seperti <strong>config files</strong> di framework lain</li>
+                    </ul>
+
+                    <h4>🎯 Spaced Repetition</h4>
+                    <p>Jadwal review yang optimal:</p>
+                    <ul>
+                        <li><strong>Hari 1:</strong> Review setelah 24 jam (sekarang!)</li>
+                        <li><strong>Hari 3:</strong> Review singkat konsep utama</li>
+                        <li><strong>Minggu 1:</strong> Praktik dengan project kecil</li>
+                        <li><strong>Bulan 1:</strong> Implementasi dalam project real</li>
+                    </ul>
+
+                    <h4>💡 Active Recall</h4>
+                    <p>Coba jawab pertanyaan tanpa melihat materi:</p>
+                    <ul>
+                        <li>Tutup ebook dan coba jelaskan Go modules</li>
+                        <li>Gambarkan struktur folder tanpa melihat</li>
+                        <li>List dependencies yang sudah diinstall</li>
+                    </ul>
+
+                    <h3>🎉 Refleksi Pembelajaran</h3>
+                    <p>Mari kita refleksikan apa yang telah dipelajari:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2c3e50;">📊 Self-Assessment</h4>
+                        <p><strong>Rate pemahaman Anda (1-5):</strong></p>
+                        <ul style="color: #495057;">
+                            <li>Go Modules: ___/5</li>
+                            <li>Dependencies Management: ___/5</li>
+                            <li>Project Structure: ___/5</li>
+                            <li>Database Configuration: ___/5</li>
+                        </ul>
+                        <p style="color: #495057;"><strong>Area yang perlu diperkuat:</strong> _________________</p>
+                    </div>
+
+                    <h3>🚀 Persiapan Bab Selanjutnya</h3>
+                    <p>Setelah beristirahat dan review, kita akan melanjutkan ke bab yang lebih menarik:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>🎯 Preview Bab 6: Model & Database Schema</h4>
+                        <p>Di bab selanjutnya, kita akan:</p>
+                        <ul>
+                            <li>✅ Membuat model User dengan GORM</li>
+                            <li>✅ Implementasi database schema</li>
+                            <li>✅ Validasi data dengan struct tags</li>
+                            <li>✅ Relationship antar model</li>
+                        </ul>
+                    </div>
+
+                    <blockquote style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 2rem 0;">
+                        <strong>💡 Tips untuk Bab Selanjutnya:</strong> Pastikan Anda sudah memahami konsep struct di Go dan basic database operations. Jika belum, luangkan waktu 10 menit untuk review materi Go fundamentals tentang struct dan interface.
+                    </blockquote>
+
+                    <h3>🎊 Selamat!</h3>
+                    <p>Anda telah berhasil menyelesaikan review bab 1-4! Otak Anda sekarang telah mengkonsolidasikan pengetahuan tentang Go modules, dependencies, project structure, dan database configuration. Ini adalah fondasi yang kuat untuk melanjutkan perjalanan pengembangan API.</p>
+
+                  
+                `
+            },
+            {
+                id: 'chapter6',
+                title: 'Bab 6: Modul Authentication - Register',
+                meta: 'Halaman 6 dari 50 • Dibaca 8 menit',
+                content: `
+                    <h2>🔐 Bab 6: Modul Authentication - Register</h2>
+                    <p>Selamat! Sekarang kita akan mulai membangun fitur authentication yang merupakan fondasi keamanan untuk API toko online. Kita akan mulai dengan modul Register terlebih dahulu, kemudian dilanjutkan dengan Login dan Logout di bab-bab selanjutnya.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat sistem register user baru dengan validasi, password hashing, dan JWT token generation. Setelah selesai, kita akan test menggunakan Postman.</p>
+                    </div>
+
+                    <h3>📋 Database Schema User</h3>
+                    <p>Berikut adalah struktur database untuk user:</p>
+
+                    <pre><code>CREATE TABLE user (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('customer', 'admin') DEFAULT 'customer',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);</code></pre>
+
+                    <h3>🏗️ Struktur File yang Akan Kita Buat</h3>
+                    <p>Kita akan mengikuti struktur pattern folder yang sudah ada. Berikut file-file yang akan kita buat:</p>
+
+                    <pre><code>tokogo/
+├── models/
+│   └── user.go                    # User model struct
+├── requests/
+│   └── auth_request.go           # Request structs untuk auth
+├── responses/
+│   └── auth_response.go          # Response structs untuk auth
+├── repositories/
+│   └── auth_repository.go        # Database operations
+├── services/
+│   └── auth_service.go           # Business logic
+├── handlers/
+│   └── auth_handler.go           # HTTP handlers
+├── helpers/
+│   └── jwt.go                    # JWT helper functions
+└── middlewares/
+    └── auth.go                   # Authentication middleware</code></pre>
+
+                    <h3>📝 Langkah 1: Membuat User Model</h3>
+                    <p>Pertama, kita buat model User di file <code>models/user.go</code>:</p>
+
+                    <pre><code>package models
+
+import (
+    "time"
+    "gorm.io/gorm"
+)
+
+type User struct {
+    ID        uint           \`gorm:"primaryKey;column:id;type:BIGINT UNSIGNED AUTO_INCREMENT" json:"id"\`
+    Name      string         \`gorm:"column:name;type:VARCHAR(255);not null" json:"name"\`
+    Email     string         \`gorm:"column:email;type:VARCHAR(255);uniqueIndex;not null" json:"email"\`
+    Password  string         \`gorm:"column:password;type:VARCHAR(255);not null" json:"-"\` // Hidden dari JSON response
+    Role      string         \`gorm:"column:role;type:ENUM('customer','admin');default:'customer'" json:"role"\`
+    CreatedAt time.Time      \`gorm:"column:created_at;type:TIMESTAMP DEFAULT CURRENT_TIMESTAMP" json:"created_at"\`
+    UpdatedAt time.Time      \`gorm:"column:updated_at;type:TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"updated_at"\`
+    DeletedAt gorm.DeletedAt \`gorm:"column:deleted_at;type:TIMESTAMP NULL;index" json:"-"\`
+}
+
+// TableName mengembalikan nama tabel untuk model User
+func (User) TableName() string {
+    return "user"
+}</code></pre>
+
+                    <h4>Penjelasan Model User:</h4>
+                    <ul>
+                        <li><strong>ID:</strong> Primary key dengan auto increment</li>
+                        <li><strong>Name:</strong> Nama user (required)</li>
+                        <li><strong>Email:</strong> Email unik (required)</li>
+                        <li><strong>Password:</strong> Password yang di-hash (hidden dari JSON)</li>
+                        <li><strong>Role:</strong> Enum dengan nilai 'customer' atau 'admin'</li>
+                        <li><strong>Timestamps:</strong> created_at, updated_at, deleted_at</li>
+                    </ul>
+
+                    <h3>📝 Langkah 2: Membuat Request Struct untuk Register</h3>
+                    <p>Buat file <code>requests/auth_request.go</code> untuk validasi input register:</p>
+
+                    <pre><code>package requests
+
+import "github.com/go-playground/validator/v10"
+
+// RegisterRequest represents the request structure for user registration
+type RegisterRequest struct {
+    Username string \`json:"username" validate:"required,min=3,max=50"\`
+    Email    string \`json:"email" validate:"required,email"\`
+    Password string \`json:"password" validate:"required,min=6"\`
+}
+
+// Validate validates the RegisterRequest using the validator
+func (r *RegisterRequest) Validate() error {
+    validate := validator.New()
+    return validate.Struct(r)
+}</code></pre>
+
+                    <h4>Penjelasan RegisterRequest:</h4>
+                    <ul>
+                        <li><strong>Username:</strong> Nama pengguna dengan validasi min 3, max 50 karakter</li>
+                        <li><strong>Email:</strong> Email dengan format yang valid</li>
+                        <li><strong>Password:</strong> Password minimal 6 karakter</li>
+                        <li><strong>Validate():</strong> Method untuk memvalidasi struct menggunakan go-playground/validator</li>
+                    </ul>
+
+                    <h4>Validasi yang Digunakan:</h4>
+                    <ul>
+                        <li><strong>required:</strong> Field wajib diisi</li>
+                        <li><strong>email:</strong> Format email yang valid</li>
+                        <li><strong>min=3,max=50:</strong> Username minimal 3, maksimal 50 karakter</li>
+                        <li><strong>min=6:</strong> Password minimal 6 karakter</li>
+                    </ul>
+
+                    <h3>📝 Langkah 3: Membuat Response Struct untuk Register</h3>
+                    <p>Buat file <code>responses/auth_response.go</code> untuk format response register:</p>
+
+                    <pre><code>package responses
+
+import "tokogo/models"
+
+// RegisterResponse struct untuk response register
+type RegisterResponse struct {
+    User  UserResponse \`json:"user"\`
+    Token string       \`json:"token"\`
+}
+
+// UserResponse struct untuk response user (tanpa password)
+type UserResponse struct {
+    ID        uint   \`json:"id"\`
+    Name      string \`json:"name"\`
+    Email     string \`json:"email"\`
+    Role      string \`json:"role"\`
+    CreatedAt string \`json:"created_at"\`
+}
+
+// ErrorResponse struct untuk response error
+type ErrorResponse struct {
+    Error   string \`json:"error"\`
+    Message string \`json:"message"\`
+}
+
+// SuccessResponse struct untuk response sukses
+type SuccessResponse struct {
+    Message string      \`json:"message"\`
+    Data    interface{} \`json:"data,omitempty"\`
+}
+
+// ConvertUserToResponse mengkonversi User model ke UserResponse
+func ConvertUserToResponse(user models.User) UserResponse {
+    return UserResponse{
+        ID:        user.ID,
+        Name:      user.Name,
+        Email:     user.Email,
+        Role:      user.Role,
+        CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+    }
+}</code></pre>
+
+                    <h4>Penjelasan Response Structs:</h4>
+                    <ul>
+                        <li><strong>RegisterResponse:</strong> Response khusus untuk register yang berisi user data dan JWT token</li>
+                        <li><strong>UserResponse:</strong> Data user tanpa password untuk keamanan</li>
+                        <li><strong>ErrorResponse:</strong> Format response untuk error</li>
+                        <li><strong>SuccessResponse:</strong> Format response untuk sukses</li>
+                        <li><strong>ConvertUserToResponse:</strong> Helper function untuk konversi model ke response</li>
+                    </ul>
+
+                    <h3>📝 Langkah 4: Membuat JWT Helper untuk Register</h3>
+                    <p>Buat file <code>helpers/jwt.go</code> untuk JWT operations:</p>
+
+                    <pre><code>package helpers
+
+import (
+    "time"
+
+    "github.com/golang-jwt/jwt"
+    "tokogo/models"
+)
+
+var jwtSecret = []byte("your-secret-key") // Gunakan dari environment variable
+
+// Claims struct untuk JWT claims
+type Claims struct {
+    UserID uint   \`json:"user_id"\`
+    Email  string \`json:"email"\`
+    Role   string \`json:"role"\`
+    jwt.StandardClaims
+}
+
+// GenerateToken menghasilkan JWT token untuk user
+func GenerateToken(user models.User) (string, error) {
+    expirationTime := time.Now().Add(24 * time.Hour) // Token berlaku 24 jam
+    
+    claims := &Claims{
+        UserID: user.ID,
+        Email:  user.Email,
+        Role:   user.Role,
+        StandardClaims: jwt.StandardClaims{
+            ExpiresAt: expirationTime.Unix(),
+            IssuedAt:  time.Now().Unix(),
+        },
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    tokenString, err := token.SignedString(jwtSecret)
+    
+    if err != nil {
+        return "", err
+    }
+
+    return tokenString, nil
+}</code></pre>
+
+                    <h4>Penjelasan JWT Helper:</h4>
+                    <ul>
+                        <li><strong>Claims:</strong> Struct yang berisi data user dalam JWT token</li>
+                        <li><strong>GenerateToken:</strong> Function untuk membuat JWT token setelah user berhasil register</li>
+                        <li><strong>ExpirationTime:</strong> Token berlaku selama 24 jam</li>
+                        <li><strong>jwtSecret:</strong> Secret key untuk signing token (sebaiknya dari environment variable)</li>
+                    </ul>
+
+                    <h3>📝 Langkah 5: Membuat Auth Repository untuk Register</h3>
+                    <p>Buat file <code>repositories/auth_repository.go</code> untuk database operations register:</p>
+
+                    <pre><code>package repositories
+
+import (
+    "errors"
+    "tokogo/config"
+    "tokogo/models"
+    "gorm.io/gorm"
+)
+
+type AuthRepository struct {
+    db *gorm.DB
+}
+
+// NewAuthRepository membuat instance baru AuthRepository
+func NewAuthRepository() *AuthRepository {
+    return &AuthRepository{
+        db: config.DB,
+    }
+}
+
+// CreateUser membuat user baru
+func (r *AuthRepository) CreateUser(user *models.User) error {
+    return r.db.Create(user).Error
+}
+
+// GetUserByEmail mengambil user berdasarkan email (untuk cek duplikasi)
+func (r *AuthRepository) GetUserByEmail(email string) (*models.User, error) {
+    var user models.User
+    err := r.db.Where("email = ?", email).First(&user).Error
+    
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, errors.New("user not found")
+        }
+        return nil, err
+    }
+    
+    return &user, nil
+}</code></pre>
+
+                    <h4>Penjelasan Auth Repository:</h4>
+                    <ul>
+                        <li><strong>CreateUser:</strong> Function untuk menyimpan user baru ke database</li>
+                        <li><strong>GetUserByEmail:</strong> Function untuk mengecek apakah email sudah terdaftar</li>
+                        <li><strong>NewAuthRepository:</strong> Constructor untuk membuat instance repository</li>
+                        <li><strong>Error Handling:</strong> Menangani error jika user tidak ditemukan</li>
+                    </ul>
+
+                    <h3>📝 Langkah 6: Membuat Auth Service untuk Register</h3>
+                    <p>Buat file <code>services/auth_service.go</code> untuk business logic register:</p>
+
+                    <pre><code>package services
+
+import (
+    "errors"
+    "tokogo/helpers"
+    "tokogo/models"
+    "tokogo/repositories"
+    "tokogo/requests"
+    "tokogo/responses"
+    "golang.org/x/crypto/bcrypt"
+)
+
+type AuthService struct {
+    authRepo *repositories.AuthRepository
+}
+
+// NewAuthService membuat instance baru AuthService
+func NewAuthService() *AuthService {
+    return &AuthService{
+        authRepo: repositories.NewAuthRepository(),
+    }
+}
+
+// Register mendaftarkan user baru
+func (s *AuthService) Register(req requests.RegisterRequest) (*responses.RegisterResponse, error) {
+    // Cek apakah email sudah terdaftar
+    existingUser, _ := s.authRepo.GetUserByEmail(req.Email)
+    if existingUser != nil {
+        return nil, errors.New("email already registered")
+    }
+
+    // Hash password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return nil, errors.New("failed to hash password")
+    }
+
+    // Buat user baru
+    user := &models.User{
+        Name:     req.Username, // Menggunakan Username dari request
+        Email:    req.Email,
+        Password: string(hashedPassword),
+        Role:     "customer", // Default role
+    }
+
+    // Simpan ke database
+    if err := s.authRepo.CreateUser(user); err != nil {
+        return nil, errors.New("failed to create user")
+    }
+
+    // Generate JWT token
+    token, err := helpers.GenerateToken(*user)
+    if err != nil {
+        return nil, errors.New("failed to generate token")
+    }
+
+    // Return response
+    return &responses.RegisterResponse{
+        User:  responses.ConvertUserToResponse(*user),
+        Token: token,
+    }, nil
+}</code></pre>
+
+                    <h4>Penjelasan Auth Service Register:</h4>
+                    <ul>
+                        <li><strong>Register Function:</strong> Business logic untuk registrasi user baru</li>
+                        <li><strong>Email Check:</strong> Mengecek apakah email sudah terdaftar</li>
+                        <li><strong>Password Hashing:</strong> Menggunakan bcrypt untuk hash password</li>
+                        <li><strong>User Creation:</strong> Membuat user baru dengan role default "customer"</li>
+                        <li><strong>JWT Generation:</strong> Membuat JWT token setelah user berhasil dibuat</li>
+                        <li><strong>Response:</strong> Mengembalikan user data dan token</li>
+                    </ul>
+
+                    <h3>📝 Langkah 7: Membuat Auth Handler untuk Register</h3>
+                    <p>Buat file <code>handlers/auth_handler.go</code> untuk HTTP handler register:</p>
+
+                    <pre><code>package handlers
+
+import (
+    "net/http"
+    "tokogo/requests"
+    "tokogo/responses"
+    "tokogo/services"
+    "github.com/gin-gonic/gin"
+)
+
+type AuthHandler struct {
+    authService *services.AuthService
+}
+
+// NewAuthHandler membuat instance baru AuthHandler
+func NewAuthHandler() *AuthHandler {
+    return &AuthHandler{
+        authService: services.NewAuthService(),
+    }
+}
+
+// Register handler untuk registrasi user baru
+func (h *AuthHandler) Register(c *gin.Context) {
+    var req requests.RegisterRequest
+    
+    // Bind dan validasi request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validasi menggunakan method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Panggil service untuk register
+    registerResponse, err := h.authService.Register(req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "register_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusCreated, responses.SuccessResponse{
+        Message: "User registered successfully",
+        Data:    registerResponse,
+    })
+}</code></pre>
+
+                    <h4>Penjelasan Auth Handler Register:</h4>
+                    <ul>
+                        <li><strong>Register Function:</strong> HTTP handler untuk endpoint register</li>
+                        <li><strong>ShouldBindJSON:</strong> Binding JSON request ke struct</li>
+                        <li><strong>Validate():</strong> Validasi menggunakan go-playground/validator</li>
+                        <li><strong>Service Call:</strong> Memanggil business logic di service layer</li>
+                        <li><strong>Response:</strong> Mengembalikan response sukses atau error</li>
+                        <li><strong>Status Code:</strong> 201 Created untuk sukses, 400 Bad Request untuk error</li>
+                    </ul>
+
+                    <h3>📝 Langkah 8: Update Main.go untuk Register</h3>
+                    <p>Update file <code>main.go</code> untuk setup route register:</p>
+
+                    <pre><code>package main
+
+import (
+    "log"
+    "tokogo/config"
+    "tokogo/handlers"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+)
+
+func main() {
+    // Load environment variables
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using system environment variables")
+    }
+
+    // Initialize database
+    config.InitDB()
+
+    // Setup Gin router
+    r := gin.Default()
+
+    // CORS middleware
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"*"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"*"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
+
+    // Initialize handlers
+    authHandler := handlers.NewAuthHandler()
+
+    // Public routes (tidak perlu authentication)
+    api := r.Group("/api/v1")
+    {
+        // Auth routes
+        auth := api.Group("/auth")
+        {
+            auth.POST("/register", authHandler.Register)
+        }
+    }
+
+    // Start server
+    port := config.GetEnv("SERVER_PORT", "8080")
+    log.Printf("Server starting on port %s", port)
+    r.Run(":" + port)
+}</code></pre>
+
+                    <h4>Penjelasan Main.go:</h4>
+                    <ul>
+                        <li><strong>Database Init:</strong> Menginisialisasi koneksi database</li>
+                        <li><strong>CORS Setup:</strong> Konfigurasi CORS untuk frontend</li>
+                        <li><strong>Route Setup:</strong> Setup route untuk register endpoint</li>
+                        <li><strong>Server Start:</strong> Menjalankan server di port yang ditentukan</li>
+                    </ul>
+
+                    <h3>📝 Langkah 9: Update Database Configuration</h3>
+                    <p>Update file <code>config/database.go</code> untuk include User model:</p>
+
+                    <pre><code>// Auto migrate model User
+if err := DB.AutoMigrate(&models.User{}); err != nil {
+    panic(fmt.Sprintf("AutoMigrate failed: %v", err))
+}</code></pre>
+
+                    <h4>Penjelasan Database Configuration:</h4>
+                    <ul>
+                        <li><strong>AutoMigrate:</strong> Otomatis membuat/update table user berdasarkan model</li>
+                        <li><strong>Error Handling:</strong> Panic jika migration gagal</li>
+                    </ul>
+
+                    <h3>🧪 Testing API Register</h3>
+                    <p>Sekarang mari kita test API register yang sudah kita buat:</p>
+
+                    <h4>1. Register User Baru</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "johndoe",
+    "email": "john@example.com",
+    "password": "password123"
+}</code></pre>
+
+                    <h4>Response Sukses (201 Created):</h4>
+                    <pre><code>{
+    "message": "User registered successfully",
+    "data": {
+        "user": {
+            "id": 1,
+            "name": "johndoe",
+            "email": "john@example.com",
+            "role": "customer",
+            "created_at": "2024-01-15 10:30:00"
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+}</code></pre>
+
+                    <h4>Response Error (400 Bad Request):</h4>
+                    <pre><code>{
+    "error": "validation_error",
+    "message": "Key: 'RegisterRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag"
+}</code></pre>
+
+                    <h4>Response Error - Email Sudah Terdaftar:</h4>
+                    <pre><code>{
+    "error": "register_failed",
+    "message": "email already registered"
+}</code></pre>
+
+                    <h3>🔧 Environment Variables</h3>
+                    <p>Pastikan file <code>.env</code> Anda memiliki konfigurasi berikut:</p>
+
+                    <pre><code># Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=tokogo
+
+# Server Configuration
+SERVER_PORT=8080
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Environment
+ENV=development</code></pre>
+
+                    <h3>📦 Dependencies yang Dibutuhkan</h3>
+                    <p>Pastikan Anda sudah menginstall dependencies berikut:</p>
+
+                    <pre><code>go get golang.org/x/crypto/bcrypt</code></pre>
+
+                    <h3>✅ Checklist Implementasi Register</h3>
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>File yang Harus Dibuat:</h4>
+                        <ul>
+                            <li>✅ models/user.go</li>
+                            <li>✅ requests/auth_request.go (RegisterRequest)</li>
+                            <li>✅ responses/auth_response.go (RegisterResponse)</li>
+                            <li>✅ helpers/jwt.go (GenerateToken)</li>
+                            <li>✅ repositories/auth_repository.go (CreateUser, GetUserByEmail)</li>
+                            <li>✅ services/auth_service.go (Register)</li>
+                            <li>✅ handlers/auth_handler.go (Register)</li>
+                        </ul>
+                        
+                        <h4>File yang Harus Diupdate:</h4>
+                        <ul>
+                            <li>✅ config/database.go (AutoMigrate User)</li>
+                            <li>✅ main.go (Register route)</li>
+                            <li>✅ .env (JWT_SECRET)</li>
+                        </ul>
+                    </div>
+
+                    <h3>🚀 Cara Menjalankan</h3>
+                    <ol>
+                        <li>Pastikan MySQL sudah berjalan</li>
+                        <li>Pastikan database 'tokogo' sudah dibuat</li>
+                        <li>Jalankan: <code>go run main.go</code></li>
+                        <li>Test dengan Postman atau curl</li>
+                    </ol>
+
+                    <h3>🎯 Fitur Register yang Sudah Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ User Registration dengan validasi</li>
+                        <li>✅ Password hashing dengan bcrypt</li>
+                        <li>✅ JWT token generation</li>
+                        <li>✅ Email uniqueness check</li>
+                        <li>✅ Input validation dengan go-playground/validator</li>
+                        <li>✅ Error handling yang proper</li>
+                        <li>✅ Response format yang konsisten</li>
+                    </ul>
+
+                    <h3>🔒 Keamanan yang Sudah Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ Password hashing dengan bcrypt</li>
+                        <li>✅ JWT token dengan expiration</li>
+                        <li>✅ Input validation dengan go-playground/validator</li>
+                        <li>✅ SQL injection protection (GORM)</li>
+                        <li>✅ CORS configuration</li>
+                        <li>✅ Environment variables untuk secret keys</li>
+                    </ul>
+
+                    <h3>🎉 Selamat!</h3>
+                    <p>Anda telah berhasil mengimplementasikan modul Register yang lengkap! Sistem register sudah siap untuk digunakan dan dapat diintegrasikan dengan frontend aplikasi.</p>
+
+                    <div style="text-align: center; margin: 3rem 0;">
+                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; color: #2c3e50; padding: 2rem; border-radius: 5px; display: inline-block;">
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Siap untuk Bab Selanjutnya?</h3>
+                            <p style="color: #495057; margin-bottom: 0;">Di bab selanjutnya, kita akan membuat modul Login untuk melengkapi sistem authentication!</p>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // Current chapter index
+        let currentChapterIndex = 0;
+
+        // Font size control
+        let currentFontSize = 16;
+        const fontSizeDisplay = document.getElementById('fontSize');
+
+        function increaseFont() {
+            currentFontSize = Math.min(currentFontSize + 2, 24);
+            const contentBody = document.getElementById('contentBody');
+            if (contentBody) {
+                contentBody.style.fontSize = currentFontSize + 'px';
+            }
+            fontSizeDisplay.textContent = currentFontSize + 'px';
+        }
+
+        function decreaseFont() {
+            currentFontSize = Math.max(currentFontSize - 2, 12);
+            const contentBody = document.getElementById('contentBody');
+            if (contentBody) {
+                contentBody.style.fontSize = currentFontSize + 'px';
+            }
+            fontSizeDisplay.textContent = currentFontSize + 'px';
+        }
+
+        // Chapter management functions
+        function renderChapterList() {
+            const chapterList = document.getElementById('chapterList');
+            chapterList.innerHTML = '';
+            
+            chapters.forEach((chapter, index) => {
+                const li = document.createElement('li');
+                li.className = 'chapter-item';
+                
+                const a = document.createElement('a');
+                a.href = `#${chapter.id}`;
+                a.className = 'chapter-link';
+                a.textContent = chapter.title;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    showChapter(index);
+                };
+                
+                li.appendChild(a);
+                chapterList.appendChild(li);
+            });
+        }
+
+        function renderChapter(index) {
+            const chapter = chapters[index];
+            const contentArea = document.getElementById('contentArea');
+            
+            contentArea.innerHTML = `
+                <div class="content-header">
+                    <h1 class="chapter-title">${chapter.title}</h1>
+                    <div class="chapter-meta">${chapter.meta}</div>
+                </div>
+                <div class="content-body" id="contentBody">
+                    ${chapter.content}
+                </div>
+                <div class="navigation">
+                    <button class="nav-btn" ${index === 0 ? 'disabled' : ''} onclick="showChapter(${index - 1})">← Sebelumnya</button>
+                    <button class="nav-btn" ${index === chapters.length - 1 ? 'disabled' : ''} onclick="showChapter(${index + 1})">Selanjutnya →</button>
+                </div>
+            `;
+            
+            // Apply font size to new content
+            const contentBody = document.getElementById('contentBody');
+            if (contentBody) {
+                contentBody.style.fontSize = currentFontSize + 'px';
+            }
+        }
+
+        function showChapter(index) {
+            if (index >= 0 && index < chapters.length) {
+                currentChapterIndex = index;
+                renderChapter(index);
+                updateActiveChapter();
+                
+                // Scroll to top
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function updateActiveChapter() {
+            document.querySelectorAll('.chapter-link').forEach((link, index) => {
+                link.classList.toggle('active', index === currentChapterIndex);
+            });
+        }
+
+        // Function to add new chapter easily
+        function addChapter(title, meta, content) {
+            const newChapter = {
+                id: `chapter${chapters.length + 1}`,
+                title: title,
+                meta: meta,
+                content: content
+            };
+            chapters.push(newChapter);
+            renderChapterList();
+            return newChapter;
+        }
+
+        // Example of how to add a new chapter:
+        // addChapter(
+        //     'Bab 3: Struktur Project',
+        //     'Halaman 3 dari 50 • Dibaca 10 menit',
+        //     '<h2>Struktur Project yang Baik</h2><p>Konten bab 3...</p>'
+        // );
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            const body = document.body;
+            const header = document.getElementById('header');
+            const logo = document.getElementById('logo');
+            const logoSubtitle = document.getElementById('logoSubtitle');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            body.classList.toggle('dark-mode');
+            header.classList.toggle('dark');
+            logo.classList.toggle('dark');
+            logoSubtitle.classList.toggle('dark');
+            themeToggle.classList.toggle('dark');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+            }
+            
+            // Save theme preference to localStorage
+            localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+        }
+
+        // Load theme preference from localStorage
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('darkMode');
+            if (savedTheme === 'true') {
+                toggleDarkMode();
+            }
+        }
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        // Progress bar
+        function updateProgress() {
+            const scrollTop = window.pageYOffset;
+            const docHeight = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        }
+
+        // Event listeners
+        window.addEventListener('scroll', function() {
+            updateProgress();
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the ebook
+            renderChapterList();
+            showChapter(0); // Start with first chapter
+            updateProgress();
+            loadThemePreference(); // Load saved theme preference
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.querySelector('.sidebar-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                sidebar && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target) && 
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '=':
+                    case '+':
+                        e.preventDefault();
+                        increaseFont();
+                        break;
+                    case '-':
+                        e.preventDefault();
+                        decreaseFont();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
