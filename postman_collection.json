@@ -21,7 +21,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+							"raw": "{\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"password123\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/register",
@@ -50,7 +50,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+									"raw": "{\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"password123\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/auth/register",
@@ -89,7 +89,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"username\": \"jo\",\n    \"email\": \"invalid-email\",\n    \"password\": \"123\"\n}"
+									"raw": "{\n    \"username\": \"jo\",\n    \"email\": \"invalid-email\",\n    \"password\": \"123\",\n    \"confirm_password\": \"123\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/auth/register",
@@ -128,7 +128,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"username\": \"johndoe2\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+									"raw": "{\n    \"username\": \"johndoe2\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"password123\"\n}"
 								},
 								"url": {
 									"raw": "{{base_url}}/api/v1/auth/register",
@@ -154,6 +154,45 @@
 							],
 							"cookie": [],
 							"body": "{\n    \"error\": \"register_failed\",\n    \"message\": \"email already registered\"\n}"
+						},
+						{
+							"name": "Password Mismatch",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"johndoe3\",\n    \"email\": \"john3@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"differentpassword\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/register",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"password and confirm_password must match\"\n}"
 						}
 					]
 				}
