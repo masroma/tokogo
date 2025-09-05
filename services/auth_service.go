@@ -61,3 +61,30 @@ func (s *AuthService) Register(req requests.RegisterRequest) (*responses.Registe
 		Token: token,
 	}, nil
 }
+
+// Login melakukan login user
+func (s *AuthService) Login(req requests.LoginRequest) (*responses.LoginResponse, error) {
+	// Cari user berdasarkan email
+	user, err := s.authRepo.GetUserByEmail(req.Email)
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	// Verifikasi password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	// Generate JWT token
+	token, err := helpers.GenerateToken(*user)
+	if err != nil {
+		return nil, errors.New("failed to generate token")
+	}
+
+	// Return response
+	return &responses.LoginResponse{
+		User:  responses.ConvertUserToResponse(*user),
+		Token: token,
+	}, nil
+}

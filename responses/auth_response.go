@@ -8,6 +8,11 @@ type RegisterResponse struct {
 	Token string       `json:"token"`
 }
 
+type LoginResponse struct {
+	User  UserResponse `json:"user"`
+	Token string       `json:"token"`
+}
+
 // UserResponse struct untuk response user (tanpa password)
 type UserResponse struct {
 	ID        uint   `json:"id"`

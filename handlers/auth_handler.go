@@ -57,3 +57,41 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Data:    registerResponse,
 	})
 }
+
+// Login handler untuk login user
+func (h *AuthHandler) Login(c *gin.Context) {
+	var req requests.LoginRequest
+
+	// Bind dan validasi request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Validasi menggunakan method Validate()
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Panggil service untuk login
+	loginResponse, err := h.authService.Login(req)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "login_failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, responses.SuccessResponse{
+		Message: "Login successful",
+		Data:    loginResponse,
+	})
+}

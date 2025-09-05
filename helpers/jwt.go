@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"time"
 
 	"tokogo/models"
@@ -40,4 +41,22 @@ func GenerateToken(user models.User) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func ValidateToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }

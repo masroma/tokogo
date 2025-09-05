@@ -14,6 +14,11 @@ type RegisterRequest struct {
 	ConfirmPassword string `json:"confirm_password" validate:"required,min=6"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
 // Validate validates the RegisterRequest using the validator
 func (r *RegisterRequest) Validate() error {
 	validate := validator.New()
@@ -29,4 +34,9 @@ func (r *RegisterRequest) Validate() error {
 	}
 
 	return nil
+}
+
+func (r *LoginRequest) Validate() error {
+	validate := validator.New()
+	return validate.Struct(r)
 }
