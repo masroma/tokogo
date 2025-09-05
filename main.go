@@ -4,6 +4,7 @@ import (
 	"log"
 	"tokogo/config"
 	"tokogo/handlers"
+	"tokogo/middlewares"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -42,6 +43,30 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+		}
+	}
+
+	// Protected routes (perlu authentication)
+	protected := r.Group("/api/v1")
+	protected.Use(middlewares.AuthMiddleware())
+	{
+		// Auth protected routes
+		auth := protected.Group("/auth")
+		{
+			auth.POST("/logout", authHandler.Logout)
+			auth.GET("/profile", authHandler.GetProfile)
+		}
+
+		// Admin routes (perlu admin role)
+		admin := protected.Group("/admin")
+		admin.Use(middlewares.AdminMiddleware())
+		{
+			admin.GET("/dashboard", func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"message": "Welcome to admin dashboard",
+					"user_id": c.GetUint("user_id"),
+				})
+			})
 		}
 	}
 

@@ -38,3 +38,18 @@ func (r *AuthRepository) GetUserByEmail(email string) (*models.User, error) {
 
 	return &user, nil
 }
+
+// GetUserByID mengambil user berdasarkan ID
+func (r *AuthRepository) GetUserByID(id uint) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("id = ?", id).First(&user).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}

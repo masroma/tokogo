@@ -88,3 +88,30 @@ func (s *AuthService) Login(req requests.LoginRequest) (*responses.LoginResponse
 		Token: token,
 	}, nil
 }
+
+// Logout melakukan logout user (client-side token removal)
+func (s *AuthService) Logout(userID uint) (*responses.LogoutResponse, error) {
+	// Untuk stateless JWT, logout dilakukan di client side
+	// Server hanya memberikan response sukses
+	// Di production, bisa implementasi token blacklist jika diperlukan
+
+	return &responses.LogoutResponse{
+		Message: "Logout successful",
+	}, nil
+}
+
+// GetProfile mengambil profile user berdasarkan ID
+func (s *AuthService) GetProfile(userID uint) (*responses.UserResponse, error) {
+	user, err := s.authRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	return &responses.UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+	}, nil
+}

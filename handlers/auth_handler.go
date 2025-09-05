@@ -95,3 +95,56 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Data:    loginResponse,
 	})
 }
+
+// Logout handler untuk logout user
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// Ambil user ID dari context (setelah AuthMiddleware)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "User not authenticated",
+		})
+		return
+	}
+
+	// Panggil service untuk logout
+	logoutResponse, err := h.authService.Logout(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+			Error:   "logout_failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, logoutResponse)
+}
+
+// GetProfile handler untuk mengambil profile user
+func (h *AuthHandler) GetProfile(c *gin.Context) {
+	// Ambil user ID dari context (setelah AuthMiddleware)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "User not authenticated",
+		})
+		return
+	}
+
+	// Panggil service untuk get profile
+	userResponse, err := h.authService.GetProfile(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusNotFound, responses.ErrorResponse{
+			Error:   "user_not_found",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, responses.SuccessResponse{
+		Message: "Profile retrieved successfully",
+		Data:    userResponse,
+	})
+}

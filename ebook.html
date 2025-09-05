@@ -119,27 +119,36 @@
         }
 
         .theme-toggle {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
             padding: 0.5rem 1rem;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: none;
         }
 
         .theme-toggle:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: #e9ecef;
+            border-color: #adb5bd;
+            transform: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .theme-toggle.dark {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: #343a40;
+            color: #f8f9fa;
+            border-color: #495057;
+        }
+
+        .theme-toggle.dark:hover {
+            background: #495057;
+            border-color: #6c757d;
         }
 
         /* Main Layout */
@@ -2750,6 +2759,2776 @@ Content-Type: application/json
                             <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Siap untuk Bab Selanjutnya?</h3>
                             <p style="color: #495057; margin-bottom: 0;">Di bab selanjutnya, kita akan membuat modul Logout dan middleware authentication untuk melengkapi sistem authentication!</p>
                         </div>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter8',
+                title: 'Bab 8: Modul Authentication - Logout',
+                meta: 'Halaman 8 dari 50 • Dibaca 10 menit',
+                content: `
+                    <h2>🚪 Bab 8: Modul Authentication - Logout</h2>
+                    <p>Selamat! Sekarang kita akan menyelesaikan sistem authentication dengan membuat modul Logout dan middleware authentication. Di bab ini, kita akan mengimplementasikan fitur logout user dan middleware untuk melindungi endpoint yang memerlukan authentication.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat sistem logout user, middleware authentication untuk melindungi endpoint, dan endpoint protected yang memerlukan JWT token. Setelah selesai, kita akan test menggunakan Postman.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6: Modul Authentication - Register</li>
+                        <li>✅ Bab 7: Modul Authentication - Login</li>
+                        <li>✅ User sudah terdaftar dan bisa login</li>
+                        <li>✅ JWT token sudah bisa di-generate</li>
+                    </ul>
+
+                    <h3>📝 Langkah 1: Buat Middleware Authentication</h3>
+                    <p>Buat file <code>middlewares/auth_middleware.go</code> untuk melindungi endpoint yang memerlukan authentication:</p>
+
+                    <pre><code>package middlewares
+
+import (
+    "net/http"
+    "strings"
+    "tokogo/helpers"
+    "tokogo/responses"
+
+    "github.com/gin-gonic/gin"
+)
+
+// AuthMiddleware middleware untuk memvalidasi JWT token
+func AuthMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Ambil token dari header Authorization
+        authHeader := c.GetHeader("Authorization")
+        if authHeader == "" {
+            c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+                Error:   "unauthorized",
+                Message: "Authorization header is required",
+            })
+            c.Abort()
+            return
+        }
+
+        // Cek format Bearer token
+        tokenParts := strings.Split(authHeader, " ")
+        if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+            c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+                Error:   "unauthorized",
+                Message: "Invalid authorization header format",
+            })
+            c.Abort()
+            return
+        }
+
+        token := tokenParts[1]
+
+        // Validasi token
+        claims, err := helpers.ValidateToken(token)
+        if err != nil {
+            c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+                Error:   "unauthorized",
+                Message: "Invalid or expired token",
+            })
+            c.Abort()
+            return
+        }
+
+        // Set user info ke context untuk digunakan di handler
+        c.Set("user_id", claims.UserID)
+        c.Set("user_email", claims.Email)
+        c.Set("user_role", claims.Role)
+
+        c.Next()
+    }
+}
+
+// AdminMiddleware middleware untuk memvalidasi admin role
+func AdminMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Cek apakah user sudah login (AuthMiddleware harus dipanggil dulu)
+        userRole, exists := c.Get("user_role")
+        if !exists {
+            c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+                Error:   "unauthorized",
+                Message: "User not authenticated",
+            })
+            c.Abort()
+            return
+        }
+
+        // Cek apakah user adalah admin
+        if userRole != "admin" {
+            c.JSON(http.StatusForbidden, responses.ErrorResponse{
+                Error:   "forbidden",
+                Message: "Admin access required",
+            })
+            c.Abort()
+            return
+        }
+
+        c.Next()
+    }
+}</code></pre>
+
+                    <h4>Penjelasan Middleware:</h4>
+                    <ul>
+                        <li><strong>AuthMiddleware:</strong> Memvalidasi JWT token dan set user info ke context</li>
+                        <li><strong>AdminMiddleware:</strong> Memvalidasi apakah user memiliki role admin</li>
+                        <li><strong>Authorization Header:</strong> Menggunakan format "Bearer {token}"</li>
+                        <li><strong>Context:</strong> Menyimpan user info untuk digunakan di handler</li>
+                    </ul>
+
+                    <h3>📝 Langkah 2: Update Auth Service untuk Logout</h3>
+                    <p>Update file <code>services/auth_service.go</code> untuk menambahkan Logout function:</p>
+
+                    <pre><code>package services
+
+import (
+    "errors"
+    "tokogo/helpers"
+    "tokogo/models"
+    "tokogo/repositories"
+    "tokogo/requests"
+    "tokogo/responses"
+    "golang.org/x/crypto/bcrypt"
+)
+
+type AuthService struct {
+    authRepo *repositories.AuthRepository
+}
+
+// NewAuthService membuat instance baru AuthService
+func NewAuthService() *AuthService {
+    return &AuthService{
+        authRepo: repositories.NewAuthRepository(),
+    }
+}
+
+// Register mendaftarkan user baru
+func (s *AuthService) Register(req requests.RegisterRequest) (*responses.RegisterResponse, error) {
+    // Cek apakah email sudah terdaftar
+    existingUser, _ := s.authRepo.GetUserByEmail(req.Email)
+    if existingUser != nil {
+        return nil, errors.New("email already registered")
+    }
+
+    // Hash password
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return nil, errors.New("failed to hash password")
+    }
+
+    // Buat user baru
+    user := &models.User{
+        Name:     req.Username, // Menggunakan Username dari request
+        Email:    req.Email,
+        Password: string(hashedPassword),
+        Role:     "customer", // Default role
+    }
+
+    // Simpan ke database
+    if err := s.authRepo.CreateUser(user); err != nil {
+        return nil, errors.New("failed to create user")
+    }
+
+    // Generate JWT token
+    token, err := helpers.GenerateToken(*user)
+    if err != nil {
+        return nil, errors.New("failed to generate token")
+    }
+
+    // Return response
+    return &responses.RegisterResponse{
+        User:  responses.ConvertUserToResponse(*user),
+        Token: token,
+    }, nil
+}
+
+// Login melakukan login user
+func (s *AuthService) Login(req requests.LoginRequest) (*responses.LoginResponse, error) {
+    // Cari user berdasarkan email
+    user, err := s.authRepo.GetUserByEmail(req.Email)
+    if err != nil {
+        return nil, errors.New("invalid email or password")
+    }
+
+    // Verifikasi password
+    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+    if err != nil {
+        return nil, errors.New("invalid email or password")
+    }
+
+    // Generate JWT token
+    token, err := helpers.GenerateToken(*user)
+    if err != nil {
+        return nil, errors.New("failed to generate token")
+    }
+
+    // Return response
+    return &responses.LoginResponse{
+        User:  responses.ConvertUserToResponse(*user),
+        Token: token,
+    }, nil
+}
+
+// Logout melakukan logout user (client-side token removal)
+func (s *AuthService) Logout(userID uint) (*responses.LogoutResponse, error) {
+    // Untuk stateless JWT, logout dilakukan di client side
+    // Server hanya memberikan response sukses
+    // Di production, bisa implementasi token blacklist jika diperlukan
+    
+    return &responses.LogoutResponse{
+        Message: "Logout successful",
+    }, nil
+}
+
+// GetProfile mengambil profile user berdasarkan ID
+func (s *AuthService) GetProfile(userID uint) (*responses.UserResponse, error) {
+    user, err := s.authRepo.GetUserByID(userID)
+    if err != nil {
+        return nil, errors.New("user not found")
+    }
+
+    return &responses.UserResponse{
+        ID:        user.ID,
+        Name:      user.Name,
+        Email:     user.Email,
+        Role:      user.Role,
+        CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+    }, nil
+}</code></pre>
+
+                    <h4>Penjelasan Logout Function:</h4>
+                    <ul>
+                        <li><strong>Stateless Logout:</strong> Untuk JWT stateless, logout dilakukan di client side</li>
+                        <li><strong>Token Removal:</strong> Client menghapus token dari storage</li>
+                        <li><strong>Server Response:</strong> Server memberikan konfirmasi logout sukses</li>
+                        <li><strong>GetProfile:</strong> Function tambahan untuk mengambil profile user</li>
+                    </ul>
+
+                    <h3>📝 Langkah 3: Update Response Struct untuk Logout</h3>
+                    <p>Update file <code>responses/auth_response.go</code> untuk menambahkan LogoutResponse:</p>
+
+                    <pre><code>package responses
+
+import "tokogo/models"
+
+// RegisterResponse struct untuk response register
+type RegisterResponse struct {
+    User  UserResponse \`json:"user"\`
+    Token string       \`json:"token"\`
+}
+
+// LoginResponse struct untuk response login
+type LoginResponse struct {
+    User  UserResponse \`json:"user"\`
+    Token string       \`json:"token"\`
+}
+
+// LogoutResponse struct untuk response logout
+type LogoutResponse struct {
+    Message string \`json:"message"\`
+}
+
+// UserResponse struct untuk response user (tanpa password)
+type UserResponse struct {
+    ID        uint   \`json:"id"\`
+    Name      string \`json:"name"\`
+    Email     string \`json:"email"\`
+    Role      string \`json:"role"\`
+    CreatedAt string \`json:"created_at"\`
+}
+
+// ErrorResponse struct untuk response error
+type ErrorResponse struct {
+    Error   string \`json:"error"\`
+    Message string \`json:"message"\`
+}
+
+// SuccessResponse struct untuk response sukses
+type SuccessResponse struct {
+    Message string      \`json:"message"\`
+    Data    interface{} \`json:"data,omitempty"\`
+}
+
+// ConvertUserToResponse mengkonversi User model ke UserResponse
+func ConvertUserToResponse(user models.User) UserResponse {
+    return UserResponse{
+        ID:        user.ID,
+        Name:      user.Name,
+        Email:     user.Email,
+        Role:      user.Role,
+        CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+    }
+}</code></pre>
+
+                    <h4>Penjelasan LogoutResponse:</h4>
+                    <ul>
+                        <li><strong>LogoutResponse:</strong> Response sederhana untuk logout yang berisi message sukses</li>
+                        <li><strong>Stateless Design:</strong> Tidak menyimpan state logout di server</li>
+                        <li><strong>Client Responsibility:</strong> Client bertanggung jawab menghapus token</li>
+                    </ul>
+
+                    <h3>📝 Langkah 4: Update Auth Repository untuk GetUserByID</h3>
+                    <p>Update file <code>repositories/auth_repository.go</code> untuk menambahkan GetUserByID:</p>
+
+                    <pre><code>package repositories
+
+import (
+    "errors"
+    "tokogo/config"
+    "tokogo/models"
+
+    "gorm.io/gorm"
+)
+
+type AuthRepository struct {
+    db *gorm.DB
+}
+
+// NewAuthRepository membuat instance baru AuthRepository
+func NewAuthRepository() *AuthRepository {
+    return &AuthRepository{
+        db: config.GetDB(),
+    }
+}
+
+// CreateUser menyimpan user baru ke database
+func (r *AuthRepository) CreateUser(user *models.User) error {
+    return r.db.Create(user).Error
+}
+
+// GetUserByEmail mengambil user berdasarkan email (untuk cek duplikasi)
+func (r *AuthRepository) GetUserByEmail(email string) (*models.User, error) {
+    var user models.User
+    err := r.db.Where("email = ?", email).First(&user).Error
+    
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, errors.New("user not found")
+        }
+        return nil, err
+    }
+    
+    return &user, nil
+}
+
+// GetUserByID mengambil user berdasarkan ID
+func (r *AuthRepository) GetUserByID(id uint) (*models.User, error) {
+    var user models.User
+    err := r.db.Where("id = ?", id).First(&user).Error
+    
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, errors.New("user not found")
+        }
+        return nil, err
+    }
+    
+    return &user, nil
+}</code></pre>
+
+                    <h4>Penjelasan GetUserByID:</h4>
+                    <ul>
+                        <li><strong>GetUserByID:</strong> Function untuk mengambil user berdasarkan ID</li>
+                        <li><strong>Error Handling:</strong> Menangani error jika user tidak ditemukan</li>
+                        <li><strong>GORM Query:</strong> Menggunakan Where clause untuk mencari berdasarkan ID</li>
+                    </ul>
+
+                    <h3>📝 Langkah 5: Update Auth Handler untuk Logout dan GetProfile</h3>
+                    <p>Update file <code>handlers/auth_handler.go</code> untuk menambahkan Logout dan GetProfile handler:</p>
+
+                    <pre><code>package handlers
+
+import (
+    "net/http"
+    "strconv"
+    "tokogo/requests"
+    "tokogo/responses"
+    "tokogo/services"
+
+    "github.com/gin-gonic/gin"
+)
+
+type AuthHandler struct {
+    authService *services.AuthService
+}
+
+// NewAuthHandler membuat instance baru AuthHandler
+func NewAuthHandler() *AuthHandler {
+    return &AuthHandler{
+        authService: services.NewAuthService(),
+    }
+}
+
+// Register handler untuk registrasi user baru
+func (h *AuthHandler) Register(c *gin.Context) {
+    var req requests.RegisterRequest
+
+    // Bind dan validasi request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validasi menggunakan method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Panggil service untuk register
+    registerResponse, err := h.authService.Register(req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "register_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusCreated, responses.SuccessResponse{
+        Message: "User registered successfully",
+        Data:    registerResponse,
+    })
+}
+
+// Login handler untuk login user
+func (h *AuthHandler) Login(c *gin.Context) {
+    var req requests.LoginRequest
+
+    // Bind dan validasi request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validasi menggunakan method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Panggil service untuk login
+    loginResponse, err := h.authService.Login(req)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "login_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Login successful",
+        Data:    loginResponse,
+    })
+}
+
+// Logout handler untuk logout user
+func (h *AuthHandler) Logout(c *gin.Context) {
+    // Ambil user ID dari context (setelah AuthMiddleware)
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User not authenticated",
+        })
+        return
+    }
+
+    // Panggil service untuk logout
+    logoutResponse, err := h.authService.Logout(userID.(uint))
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+            Error:   "logout_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, logoutResponse)
+}
+
+// GetProfile handler untuk mengambil profile user
+func (h *AuthHandler) GetProfile(c *gin.Context) {
+    // Ambil user ID dari context (setelah AuthMiddleware)
+    userID, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User not authenticated",
+        })
+        return
+    }
+
+    // Panggil service untuk get profile
+    userResponse, err := h.authService.GetProfile(userID.(uint))
+    if err != nil {
+        c.JSON(http.StatusNotFound, responses.ErrorResponse{
+            Error:   "user_not_found",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Profile retrieved successfully",
+        Data:    userResponse,
+    })
+}</code></pre>
+
+                    <h4>Penjelasan Handler Baru:</h4>
+                    <ul>
+                        <li><strong>Logout Handler:</strong> Menggunakan user_id dari context untuk logout</li>
+                        <li><strong>GetProfile Handler:</strong> Mengambil profile user berdasarkan ID dari context</li>
+                        <li><strong>Context Usage:</strong> Menggunakan data user yang sudah di-set oleh middleware</li>
+                        <li><strong>Error Handling:</strong> Menangani error jika user tidak authenticated</li>
+                    </ul>
+
+                    <h3>📝 Langkah 6: Update Main.go untuk Logout dan Protected Routes</h3>
+                    <p>Update file <code>main.go</code> untuk menambahkan route logout dan protected routes:</p>
+
+                    <pre><code>package main
+
+import (
+    "log"
+    "tokogo/config"
+    "tokogo/handlers"
+    "tokogo/middlewares"
+
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+)
+
+func main() {
+    // Load environment variables
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using system environment variables")
+    }
+
+    // Initialize database
+    config.InitDB()
+
+    // Setup Gin router
+    r := gin.Default()
+
+    // CORS middleware
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"*"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"*"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
+
+    // Initialize handlers
+    authHandler := handlers.NewAuthHandler()
+
+    // Public routes (tidak perlu authentication)
+    api := r.Group("/api/v1")
+    {
+        // Auth routes
+        auth := api.Group("/auth")
+        {
+            auth.POST("/register", authHandler.Register)
+            auth.POST("/login", authHandler.Login)
+        }
+    }
+
+    // Protected routes (perlu authentication)
+    protected := r.Group("/api/v1")
+    protected.Use(middlewares.AuthMiddleware())
+    {
+        // Auth protected routes
+        auth := protected.Group("/auth")
+        {
+            auth.POST("/logout", authHandler.Logout)
+            auth.GET("/profile", authHandler.GetProfile)
+        }
+
+        // Admin routes (perlu admin role)
+        admin := protected.Group("/admin")
+        admin.Use(middlewares.AdminMiddleware())
+        {
+            admin.GET("/dashboard", func(c *gin.Context) {
+                c.JSON(200, gin.H{
+                    "message": "Welcome to admin dashboard",
+                    "user_id": c.GetUint("user_id"),
+                })
+            })
+        }
+    }
+
+    // Start server
+    port := config.GetEnv("SERVER_PORT", "8080")
+    log.Printf("Server starting on port %s", port)
+    r.Run(":" + port)
+}</code></pre>
+
+                    <h4>Penjelasan Main.go Update:</h4>
+                    <ul>
+                        <li><strong>Protected Routes:</strong> Menggunakan AuthMiddleware untuk melindungi endpoint</li>
+                        <li><strong>Logout Route:</strong> POST /api/v1/auth/logout (protected)</li>
+                        <li><strong>Profile Route:</strong> GET /api/v1/auth/profile (protected)</li>
+                        <li><strong>Admin Routes:</strong> Menggunakan AdminMiddleware untuk role admin</li>
+                        <li><strong>Middleware Chain:</strong> AuthMiddleware -> AdminMiddleware untuk admin routes</li>
+                    </ul>
+
+                    <h3>🧪 Testing API Logout dan Protected Routes</h3>
+                    <p>Sekarang mari kita test API logout dan protected routes yang sudah kita buat:</p>
+
+                    <h4>1. Login User (untuk mendapatkan token)</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "password123"
+}</code></pre>
+
+                    <h4>2. Get Profile (Protected Route)</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/auth/profile
+Authorization: Bearer {your_jwt_token}</code></pre>
+
+                    <h4>Response Sukses (200 OK):</h4>
+                    <pre><code>{
+    "message": "Profile retrieved successfully",
+    "data": {
+        "id": 1,
+        "name": "johndoe",
+        "email": "john@example.com",
+        "role": "customer",
+        "created_at": "2024-01-15 10:30:00"
+    }
+}</code></pre>
+
+                    <h4>3. Logout User</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/auth/logout
+Authorization: Bearer {your_jwt_token}</code></pre>
+
+                    <h4>Response Sukses (200 OK):</h4>
+                    <pre><code>{
+    "message": "Logout successful"
+}</code></pre>
+
+                    <h4>4. Test Protected Route tanpa Token</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/auth/profile</code></pre>
+
+                    <h4>Response Error (401 Unauthorized):</h4>
+                    <pre><code>{
+    "error": "unauthorized",
+    "message": "Authorization header is required"
+}</code></pre>
+
+                    <h4>5. Test Admin Route (Customer Role)</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/admin/dashboard
+Authorization: Bearer {customer_jwt_token}</code></pre>
+
+                    <h4>Response Error (403 Forbidden):</h4>
+                    <pre><code>{
+    "error": "forbidden",
+    "message": "Admin access required"
+}</code></pre>
+
+                    <h3>✅ Checklist Implementasi Logout</h3>
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>File yang Harus Dibuat:</h4>
+                        <ul>
+                            <li>✅ middlewares/auth_middleware.go (AuthMiddleware, AdminMiddleware)</li>
+                        </ul>
+                        
+                        <h4>File yang Harus Diupdate:</h4>
+                        <ul>
+                            <li>✅ responses/auth_response.go (LogoutResponse)</li>
+                            <li>✅ repositories/auth_repository.go (GetUserByID)</li>
+                            <li>✅ services/auth_service.go (Logout, GetProfile)</li>
+                            <li>✅ handlers/auth_handler.go (Logout, GetProfile)</li>
+                            <li>✅ main.go (Protected routes, middleware)</li>
+                        </ul>
+                    </div>
+
+                    <h3>🚀 Cara Menjalankan</h3>
+                    <ol>
+                        <li>Pastikan MySQL sudah berjalan</li>
+                        <li>Pastikan database 'tokogo' sudah dibuat</li>
+                        <li>Pastikan ada user yang sudah terdaftar dan bisa login</li>
+                        <li>Jalankan: <code>go run main.go</code></li>
+                        <li>Test dengan Postman atau curl</li>
+                    </ol>
+
+                    <h3>🎯 Fitur Logout yang Sudah Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ User Logout dengan JWT token validation</li>
+                        <li>✅ Middleware Authentication untuk protected routes</li>
+                        <li>✅ Middleware Admin untuk admin-only routes</li>
+                        <li>✅ Get Profile endpoint yang protected</li>
+                        <li>✅ Admin Dashboard endpoint</li>
+                        <li>✅ Error handling yang proper</li>
+                        <li>✅ Response format yang konsisten</li>
+                    </ul>
+
+                    <h3>🔒 Keamanan yang Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ JWT token validation di middleware</li>
+                        <li>✅ Authorization header validation</li>
+                        <li>✅ Role-based access control (AdminMiddleware)</li>
+                        <li>✅ Protected routes dengan authentication</li>
+                        <li>✅ Context-based user information</li>
+                        <li>✅ Stateless logout design</li>
+                        <li>✅ Proper error messages untuk security</li>
+                    </ul>
+
+                    <h3>🎉 Selamat!</h3>
+                    <p>Anda telah berhasil mengimplementasikan modul Logout yang lengkap! Sistem authentication sudah lengkap dengan Register, Login, Logout, dan middleware protection. Sistem sudah siap untuk digunakan dan dapat diintegrasikan dengan frontend aplikasi.</p>
+
+                    <div style="text-align: center; margin: 3rem 0;">
+                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; color: #2c3e50; padding: 2rem; border-radius: 5px; display: inline-block;">
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Sistem Authentication Lengkap!</h3>
+                            <p style="color: #495057; margin-bottom: 0;">Sekarang Anda memiliki sistem authentication yang lengkap dengan Register, Login, Logout, dan middleware protection. Siap untuk melanjutkan ke modul berikutnya!</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter9',
+                title: 'Bab 9: Relaksasi & Review Pembelajaran - Modul Authentication',
+                meta: 'Halaman 9 dari 50 • Dibaca 15 menit',
+                content: `
+                    <h2>Bab 9: Relaksasi & Review Pembelajaran - Modul Authentication</h2>
+                    <p>Selamat! Anda telah berhasil menyelesaikan modul Authentication yang lengkap (Bab 6-8). Sekarang saatnya untuk beristirahat sejenak dan mengulas kembali semua yang telah dipelajari tentang sistem authentication. Bab ini dirancang untuk membantu otak Anda mengkonsolidasikan pengetahuan authentication yang baru saja diperoleh.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Pencapaian yang Luar Biasa!</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Anda telah berhasil membangun sistem authentication yang lengkap dengan Register, Login, Logout, dan middleware protection. Ini adalah pencapaian yang sangat membanggakan!</p>
+                    </div>
+
+                    <h3>Ringkasan Pembelajaran Bab 6-8</h3>
+                    <p>Sebelum masuk ke pertanyaan review, mari kita ingat kembali perjalanan pembelajaran authentication yang telah kita lalui:</p>
+
+                    <h4>Bab 6: Modul Authentication - Register</h4>
+                    <ul>
+                        <li>✅ User registration dengan validasi input</li>
+                        <li>✅ Password hashing dengan bcrypt</li>
+                        <li>✅ Email uniqueness validation</li>
+                        <li>✅ Konfirmasi password untuk keamanan</li>
+                        <li>✅ JWT token generation setelah registrasi</li>
+                        <li>✅ Response format yang konsisten</li>
+                        <li>✅ Error handling yang proper</li>
+                    </ul>
+
+                    <h4>Bab 7: Modul Authentication - Login</h4>
+                    <ul>
+                        <li>✅ User login dengan validasi email/password</li>
+                        <li>✅ Password verification dengan bcrypt</li>
+                        <li>✅ JWT token generation setelah login sukses</li>
+                        <li>✅ Input validation dengan go-playground/validator</li>
+                        <li>✅ Error handling untuk invalid credentials</li>
+                        <li>✅ Security: Error message yang sama untuk keamanan</li>
+                        <li>✅ Response format yang konsisten</li>
+                    </ul>
+
+                    <h4>Bab 8: Modul Authentication - Logout</h4>
+                    <ul>
+                        <li>✅ User logout dengan JWT token validation</li>
+                        <li>✅ Middleware Authentication untuk protected routes</li>
+                        <li>✅ Middleware Admin untuk role-based access control</li>
+                        <li>✅ Get Profile endpoint yang protected</li>
+                        <li>✅ Admin Dashboard endpoint</li>
+                        <li>✅ Authorization header validation</li>
+                        <li>✅ Context-based user information</li>
+                    </ul>
+
+                    <h3>Pertanyaan Review Interaktif</h3>
+                    <p>Mari kita uji pemahaman Anda dengan pertanyaan-pertanyaan yang dirancang untuk mengaktifkan kembali memori dan memperkuat pembelajaran authentication:</p>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #3498db; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Bagian A: Konsep Dasar Authentication</h4>
+                        
+                        <p><strong>1. Mengapa kita menggunakan bcrypt untuk hashing password?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: bcrypt adalah algoritma hashing yang aman dan slow, membuat brute force attack menjadi sangat sulit dan memakan waktu lama.</p>
+                        
+                        <p><strong>2. Apa perbedaan antara JWT token dan session-based authentication?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: JWT adalah stateless (tidak menyimpan state di server), sementara session-based menyimpan state di server. JWT lebih scalable untuk distributed systems.</p>
+                        
+                        <p><strong>3. Mengapa kita memvalidasi konfirmasi password di sisi server?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Validasi di server memastikan keamanan dan mencegah user salah ketik password, meskipun sudah ada validasi di client side.</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #e74c3c; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Bagian B: Middleware & Security</h4>
+                        
+                        <p><strong>4. Bagaimana cara kerja AuthMiddleware dalam melindungi endpoint?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: AuthMiddleware memvalidasi JWT token dari Authorization header, mengekstrak user info, dan menyimpannya di context untuk digunakan di handler.</p>
+                        
+                        <p><strong>5. Apa perbedaan antara AuthMiddleware dan AdminMiddleware?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: AuthMiddleware memvalidasi token dan set user info, sementara AdminMiddleware memvalidasi apakah user memiliki role admin.</p>
+                        
+                        <p><strong>6. Mengapa kita menggunakan format "Bearer {token}" untuk Authorization header?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Ini adalah standar OAuth 2.0 yang memisahkan tipe authentication (Bearer) dengan token, memudahkan parsing dan validasi.</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #f39c12; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Bagian C: Arsitektur & Best Practices</h4>
+                        
+                        <p><strong>7. Jelaskan alur authentication flow dari register sampai logout!</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Register → Hash password → Save user → Generate JWT → Login → Validate credentials → Generate JWT → Access protected routes → Logout → Remove token (client-side).</p>
+                        
+                        <p><strong>8. Mengapa kita menggunakan layered architecture untuk authentication?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Separation of concerns, maintainability, testability, dan scalability. Setiap layer memiliki tanggung jawab yang jelas.</p>
+                        
+                        <p><strong>9. Bagaimana cara implementasi stateless logout dengan JWT?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Server memberikan response sukses, client menghapus token dari storage. Untuk production, bisa implementasi token blacklist.</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border-left: 4px solid #27ae60; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Bagian D: Error Handling & Security</h4>
+                        
+                        <p><strong>10. Mengapa kita memberikan error message yang sama untuk "invalid email or password"?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Untuk keamanan, mencegah attacker mengetahui apakah email terdaftar atau tidak, menghindari user enumeration attack.</p>
+                        
+                        <p><strong>11. Apa yang terjadi jika JWT token expired?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: ValidateToken akan return error, middleware akan mengembalikan 401 Unauthorized, client harus login ulang.</p>
+                        
+                        <p><strong>12. Bagaimana cara mengimplementasikan role-based access control?</strong></p>
+                        <p style="color: #666; font-style: italic;">Jawaban: Menggunakan AdminMiddleware yang memvalidasi role dari JWT claims, memberikan akses berbeda berdasarkan role user.</p>
+                    </div>
+
+                    <h3>Latihan Praktis</h3>
+                    <p>Mari kita lakukan beberapa latihan praktis untuk memperkuat pemahaman:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Latihan 1: Analisis Security</h4>
+                        <p>Analisis kode authentication yang sudah dibuat dan identifikasi:</p>
+                        <ul>
+                            <li>✅ Password hashing dengan bcrypt</li>
+                            <li>✅ JWT token dengan expiration</li>
+                            <li>✅ Input validation</li>
+                            <li>✅ SQL injection protection (GORM)</li>
+                            <li>✅ CORS configuration</li>
+                            <li>✅ Generic error messages</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Latihan 2: Testing Scenarios</h4>
+                        <p>Test berbagai skenario authentication:</p>
+                        <ul>
+                            <li>✅ Register dengan email yang sudah ada</li>
+                            <li>✅ Login dengan password yang salah</li>
+                            <li>✅ Akses protected route tanpa token</li>
+                            <li>✅ Akses admin route dengan customer role</li>
+                            <li>✅ Logout dengan token yang valid</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Latihan 3: Code Review</h4>
+                        <p>Review kode authentication dan identifikasi:</p>
+                        <ul>
+                            <li>✅ Error handling yang konsisten</li>
+                            <li>✅ Response format yang seragam</li>
+                            <li>✅ Middleware yang reusable</li>
+                            <li>✅ Separation of concerns</li>
+                            <li>✅ Security best practices</li>
+                        </ul>
+                    </div>
+
+                    <h3>Teknik Memori untuk Authentication</h3>
+                    <p>Berikut adalah teknik memori untuk mengingat konsep-konsep authentication:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Akronim: AUTH-FLOW</h4>
+                        <ul>
+                            <li><strong>A</strong>uthentication - Verifikasi identitas user</li>
+                            <li><strong>U</strong>ser Registration - Pendaftaran user baru</li>
+                            <li><strong>T</strong>oken Generation - Pembuatan JWT token</li>
+                            <li><strong>H</strong>ashing - Password hashing dengan bcrypt</li>
+                            <li><strong>F</strong>low Control - Middleware untuk kontrol akses</li>
+                            <li><strong>L</strong>ogin/Logout - Proses masuk dan keluar</li>
+                            <li><strong>O</strong>wnership - User ownership data</li>
+                            <li><strong>W</strong>eb Security - Keamanan web application</li>
+                        </ul>
+                    </div>
+
+                    <h3>Self-Assessment</h3>
+                    <p>Evaluasi pemahaman Anda tentang modul Authentication:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Kemampuan yang Harus Dikuasai:</h4>
+                        <ul>
+                            <li>✅ Memahami konsep authentication dan authorization</li>
+                            <li>✅ Mampu implementasi user registration dengan validasi</li>
+                            <li>✅ Mampu implementasi user login dengan JWT</li>
+                            <li>✅ Mampu implementasi user logout</li>
+                            <li>✅ Mampu membuat middleware authentication</li>
+                            <li>✅ Mampu implementasi role-based access control</li>
+                            <li>✅ Mampu testing API authentication</li>
+                            <li>✅ Memahami security best practices</li>
+                        </ul>
+                    </div>
+
+                    <h3>Tips untuk Pengembangan Selanjutnya</h3>
+                    <p>Berikut adalah tips untuk mengembangkan sistem authentication lebih lanjut:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Fitur Tambahan yang Bisa Dikembangkan:</h4>
+                        <ul>
+                            <li>🔐 Password reset functionality</li>
+                            <li>🔐 Email verification</li>
+                            <li>🔐 Two-factor authentication (2FA)</li>
+                            <li>🔐 Refresh token mechanism</li>
+                            <li>🔐 Rate limiting untuk login attempts</li>
+                            <li>🔐 Account lockout setelah failed attempts</li>
+                            <li>🔐 Audit logging untuk security</li>
+                            <li>🔐 OAuth integration (Google, Facebook)</li>
+                        </ul>
+                    </div>
+
+                    <h3>Refleksi Pembelajaran</h3>
+                    <p>Mari kita refleksikan apa yang telah dipelajari:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Pencapaian yang Membanggakan:</h4>
+                        <ul>
+                            <li>🎯 Berhasil membangun sistem authentication yang lengkap</li>
+                            <li>🎯 Memahami konsep JWT dan stateless authentication</li>
+                            <li>🎯 Mampu implementasi middleware untuk security</li>
+                            <li>🎯 Memahami role-based access control</li>
+                            <li>🎯 Mampu testing API dengan Postman</li>
+                            <li>🎯 Memahami security best practices</li>
+                        </ul>
+                    </div>
+
+                 
+
+                    <h3>Kata-kata Motivasi</h3>
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; margin: 2rem 0; border-radius: 5px; text-align: center;">
+                        <p style="font-size: 1.1rem; color: #2c3e50; font-style: italic; margin-bottom: 0;">
+                            "Authentication adalah fondasi keamanan aplikasi. Dengan menguasai konsep ini, Anda telah membangun dasar yang kuat untuk mengembangkan aplikasi yang aman dan terpercaya. Teruslah belajar dan eksplorasi fitur-fitur keamanan yang lebih advanced!"
+                        </p>
+                    </div>
+
+                    <h3>Selamat!</h3>
+                    <p>Anda telah berhasil menyelesaikan modul Authentication yang lengkap! Ini adalah pencapaian yang luar biasa. Sistem authentication yang Anda buat sudah siap untuk production dan dapat diintegrasikan dengan frontend aplikasi.</p>
+
+                    <div style="text-align: center; margin: 3rem 0;">
+                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; color: #2c3e50; padding: 2rem; border-radius: 5px; display: inline-block;">
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Siap untuk Modul Selanjutnya?</h3>
+                            <p style="color: #495057; margin-bottom: 0;">Dengan sistem authentication yang lengkap, Anda siap untuk melanjutkan ke modul berikutnya seperti Product Management atau Shopping Cart!</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter10',
+                title: 'Bab 10: Modul CRUD Kategori - Role Admin',
+                meta: 'Halaman 10 dari 50 • Dibaca 12 menit',
+                content: `
+                    <h2>📂 Bab 10: Modul CRUD Kategori - Role Admin</h2>
+                    <p>Selamat! Sekarang kita akan membuat modul CRUD (Create, Read, Update, Delete) untuk Kategori yang hanya bisa diakses oleh admin. Di bab ini, kita akan mengimplementasikan sistem manajemen kategori dengan role-based access control.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat sistem CRUD kategori yang lengkap dengan Create, Read, Update, Delete operations. Semua endpoint hanya bisa diakses oleh admin. Setelah selesai, kita akan test menggunakan Postman.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6-8: Modul Authentication (Register, Login, Logout)</li>
+                        <li>✅ Bab 9: Review Pembelajaran Authentication</li>
+                        <li>✅ Middleware authentication sudah berfungsi</li>
+                        <li>✅ AdminMiddleware sudah diimplementasikan</li>
+                    </ul>
+
+                    <h3>📊 Database Schema Kategori</h3>
+                    <p>Berdasarkan requirement yang diberikan, berikut adalah struktur tabel kategori:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>Table: categories</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <thead>
+                                <tr style="background: #e9ecef;">
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Field</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Type</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">id</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">BIGINT PK</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Auto Increment</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">name</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">VARCHAR</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Nama kategori</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">slug</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">VARCHAR</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">URL-friendly identifier</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">created_at</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Waktu dibuat</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">updated_at</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Waktu diupdate</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">deleted_at</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Soft delete</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>📝 Langkah 1: Buat Model Category</h3>
+                    <p>Buat file <code>models/category.go</code> untuk model kategori:</p>
+
+                    <pre><code>package models
+
+import (
+    "time"
+    "strings"
+    "gorm.io/gorm"
+)
+
+type Category struct {
+    ID        uint           \`gorm:"primaryKey;column:id;type:BIGINT UNSIGNED AUTO_INCREMENT" json:"id"\`
+    Name      string         \`gorm:"column:name;type:VARCHAR(255);not null" json:"name"\`
+    Slug      string         \`gorm:"column:slug;type:VARCHAR(255);uniqueIndex;not null" json:"slug"\`
+    CreatedAt time.Time      \`gorm:"column:created_at;type:TIMESTAMP DEFAULT CURRENT_TIMESTAMP" json:"created_at"\`
+    UpdatedAt time.Time      \`gorm:"column:updated_at;type:TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"updated_at"\`
+    DeletedAt gorm.DeletedAt \`gorm:"column:deleted_at;type:TIMESTAMP NULL;index" json:"-"\`
+}
+
+// TableName mengembalikan nama tabel untuk model Category
+func (Category) TableName() string {
+    return "categories"
+}
+
+// GenerateSlug menghasilkan slug dari nama kategori
+func (c *Category) GenerateSlug() {
+    slug := strings.ToLower(c.Name)
+    slug = strings.ReplaceAll(slug, " ", "-")
+    slug = strings.ReplaceAll(slug, "_", "-")
+    c.Slug = slug
+}
+
+// BeforeCreate hook untuk generate slug sebelum create
+func (c *Category) BeforeCreate(tx *gorm.DB) error {
+    c.GenerateSlug()
+    return nil
+}
+
+// BeforeUpdate hook untuk generate slug sebelum update
+func (c *Category) BeforeUpdate(tx *gorm.DB) error {
+    c.GenerateSlug()
+    return nil
+}</code></pre>
+
+                    <h4>Penjelasan Model Category:</h4>
+                    <ul>
+                        <li><strong>Struct Fields:</strong> Sesuai dengan database schema yang diberikan</li>
+                        <li><strong>GORM Tags:</strong> Mapping ke database dengan tipe data yang tepat</li>
+                        <li><strong>GenerateSlug:</strong> Function untuk membuat slug dari nama kategori</li>
+                        <li><strong>Hooks:</strong> BeforeCreate dan BeforeUpdate untuk auto-generate slug</li>
+                        <li><strong>Soft Delete:</strong> Menggunakan gorm.DeletedAt untuk soft delete</li>
+                    </ul>
+
+                    <h3>📝 Langkah 2: Buat Request Struct untuk Category</h3>
+                    <p>Buat file <code>requests/category_request.go</code> untuk validasi input kategori:</p>
+
+                    <pre><code>package requests
+
+import (
+    "errors"
+    "github.com/go-playground/validator/v10"
+)
+
+// CreateCategoryRequest represents the request structure for creating category
+type CreateCategoryRequest struct {
+    Name string \`json:"name" validate:"required,min=2,max=100"\`
+}
+
+// UpdateCategoryRequest represents the request structure for updating category
+type UpdateCategoryRequest struct {
+    Name string \`json:"name" validate:"required,min=2,max=100"\`
+}
+
+// Validate validates the CreateCategoryRequest using the validator
+func (r *CreateCategoryRequest) Validate() error {
+    validate := validator.New()
+    
+    // Validasi struct fields
+    if err := validate.Struct(r); err != nil {
+        return err
+    }
+    
+    // Validasi custom: nama tidak boleh kosong setelah trim
+    if strings.TrimSpace(r.Name) == "" {
+        return errors.New("name cannot be empty")
+    }
+    
+    return nil
+}
+
+// Validate validates the UpdateCategoryRequest using the validator
+func (r *UpdateCategoryRequest) Validate() error {
+    validate := validator.New()
+    
+    // Validasi struct fields
+    if err := validate.Struct(r); err != nil {
+        return err
+    }
+    
+    // Validasi custom: nama tidak boleh kosong setelah trim
+    if strings.TrimSpace(r.Name) == "" {
+        return errors.New("name cannot be empty")
+    }
+    
+    return nil
+}</code></pre>
+
+                    <h4>Penjelasan Request Struct:</h4>
+                    <ul>
+                        <li><strong>CreateCategoryRequest:</strong> Untuk membuat kategori baru</li>
+                        <li><strong>UpdateCategoryRequest:</strong> Untuk update kategori yang sudah ada</li>
+                        <li><strong>Validation:</strong> Nama minimal 2 karakter, maksimal 100 karakter</li>
+                        <li><strong>Custom Validation:</strong> Nama tidak boleh kosong setelah trim</li>
+                    </ul>
+
+                    <h3>📝 Langkah 3: Buat Response Struct untuk Category</h3>
+                    <p>Buat file <code>responses/category_response.go</code> untuk format response kategori:</p>
+
+                    <pre><code>package responses
+
+import "tokogo/models"
+
+// CategoryResponse struct untuk response category
+type CategoryResponse struct {
+    ID        uint   \`json:"id"\`
+    Name      string \`json:"name"\`
+    Slug      string \`json:"slug"\`
+    CreatedAt string \`json:"created_at"\`
+    UpdatedAt string \`json:"updated_at"\`
+}
+
+// CategoryListResponse struct untuk response list category
+type CategoryListResponse struct {
+    Categories []CategoryResponse \`json:"categories"\`
+    Total      int                \`json:"total"\`
+    Page       int                \`json:"page"\`
+    Limit      int                \`json:"limit"\`
+}
+
+// ConvertCategoryToResponse mengkonversi Category model ke CategoryResponse
+func ConvertCategoryToResponse(category models.Category) CategoryResponse {
+    return CategoryResponse{
+        ID:        category.ID,
+        Name:      category.Name,
+        Slug:      category.Slug,
+        CreatedAt: category.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt: category.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }
+}
+
+// ConvertCategoriesToResponse mengkonversi slice Category ke slice CategoryResponse
+func ConvertCategoriesToResponse(categories []models.Category) []CategoryResponse {
+    var responses []CategoryResponse
+    for _, category := range categories {
+        responses = append(responses, ConvertCategoryToResponse(category))
+    }
+    return responses
+}</code></pre>
+
+                    <h4>Penjelasan Response Struct:</h4>
+                    <ul>
+                        <li><strong>CategoryResponse:</strong> Response untuk single category</li>
+                        <li><strong>CategoryListResponse:</strong> Response untuk list category dengan pagination</li>
+                        <li><strong>Convert Functions:</strong> Helper functions untuk konversi model ke response</li>
+                        <li><strong>Date Formatting:</strong> Format tanggal yang konsisten</li>
+                    </ul>
+
+                    <h3>📝 Langkah 4: Buat Category Repository</h3>
+                    <p>Buat file <code>repositories/category_repository.go</code> untuk database operations:</p>
+
+                    <pre><code>package repositories
+
+import (
+    "errors"
+    "tokogo/config"
+    "tokogo/models"
+
+    "gorm.io/gorm"
+)
+
+type CategoryRepository struct {
+    db *gorm.DB
+}
+
+// NewCategoryRepository membuat instance baru CategoryRepository
+func NewCategoryRepository() *CategoryRepository {
+    return &CategoryRepository{
+        db: config.GetDB(),
+    }
+}
+
+// CreateCategory menyimpan category baru ke database
+func (r *CategoryRepository) CreateCategory(category *models.Category) error {
+    return r.db.Create(category).Error
+}
+
+// GetCategoryByID mengambil category berdasarkan ID
+func (r *CategoryRepository) GetCategoryByID(id uint) (*models.Category, error) {
+    var category models.Category
+    err := r.db.Where("id = ?", id).First(&category).Error
+    
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, errors.New("category not found")
+        }
+        return nil, err
+    }
+    
+    return &category, nil
+}
+
+// GetCategoryBySlug mengambil category berdasarkan slug
+func (r *CategoryRepository) GetCategoryBySlug(slug string) (*models.Category, error) {
+    var category models.Category
+    err := r.db.Where("slug = ?", slug).First(&category).Error
+    
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return nil, errors.New("category not found")
+        }
+        return nil, err
+    }
+    
+    return &category, nil
+}
+
+// GetAllCategories mengambil semua categories dengan pagination
+func (r *CategoryRepository) GetAllCategories(page, limit int) ([]models.Category, int64, error) {
+    var categories []models.Category
+    var total int64
+
+    // Hitung total records
+    if err := r.db.Model(&models.Category{}).Count(&total).Error; err != nil {
+        return nil, 0, err
+    }
+
+    // Ambil data dengan pagination
+    offset := (page - 1) * limit
+    err := r.db.Offset(offset).Limit(limit).Order("created_at DESC").Find(&categories).Error
+    
+    return categories, total, err
+}
+
+// UpdateCategory mengupdate category berdasarkan ID
+func (r *CategoryRepository) UpdateCategory(id uint, category *models.Category) error {
+    return r.db.Where("id = ?", id).Updates(category).Error
+}
+
+// DeleteCategory menghapus category berdasarkan ID (soft delete)
+func (r *CategoryRepository) DeleteCategory(id uint) error {
+    return r.db.Where("id = ?", id).Delete(&models.Category{}).Error
+}
+
+// CheckCategoryExists mengecek apakah category dengan nama tertentu sudah ada
+func (r *CategoryRepository) CheckCategoryExists(name string, excludeID uint) (bool, error) {
+    var count int64
+    query := r.db.Model(&models.Category{}).Where("name = ?", name)
+    
+    if excludeID > 0 {
+        query = query.Where("id != ?", excludeID)
+    }
+    
+    err := query.Count(&count).Error
+    return count > 0, err
+}</code></pre>
+
+                    <h4>Penjelasan Category Repository:</h4>
+                    <ul>
+                        <li><strong>CRUD Operations:</strong> Create, Read, Update, Delete category</li>
+                        <li><strong>Pagination:</strong> GetAllCategories dengan pagination support</li>
+                        <li><strong>Soft Delete:</strong> DeleteCategory menggunakan soft delete</li>
+                        <li><strong>Validation:</strong> CheckCategoryExists untuk cek duplikasi nama</li>
+                        <li><strong>Error Handling:</strong> Proper error handling untuk setiap operation</li>
+                    </ul>
+
+                    <h3>📝 Langkah 5: Buat Category Service</h3>
+                    <p>Buat file <code>services/category_service.go</code> untuk business logic kategori:</p>
+
+                    <pre><code>package services
+
+import (
+    "errors"
+    "tokogo/models"
+    "tokogo/repositories"
+    "tokogo/requests"
+    "tokogo/responses"
+)
+
+type CategoryService struct {
+    categoryRepo *repositories.CategoryRepository
+}
+
+// NewCategoryService membuat instance baru CategoryService
+func NewCategoryService() *CategoryService {
+    return &CategoryService{
+        categoryRepo: repositories.NewCategoryRepository(),
+    }
+}
+
+// CreateCategory membuat category baru
+func (s *CategoryService) CreateCategory(req requests.CreateCategoryRequest) (*responses.CategoryResponse, error) {
+    // Cek apakah nama category sudah ada
+    exists, err := s.categoryRepo.CheckCategoryExists(req.Name, 0)
+    if err != nil {
+        return nil, errors.New("failed to check category existence")
+    }
+    if exists {
+        return nil, errors.New("category name already exists")
+    }
+
+    // Buat category baru
+    category := &models.Category{
+        Name: req.Name,
+    }
+
+    // Simpan ke database
+    if err := s.categoryRepo.CreateCategory(category); err != nil {
+        return nil, errors.New("failed to create category")
+    }
+
+    // Return response
+    return &responses.CategoryResponse{
+        ID:        category.ID,
+        Name:      category.Name,
+        Slug:      category.Slug,
+        CreatedAt: category.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt: category.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }, nil
+}
+
+// GetCategoryByID mengambil category berdasarkan ID
+func (s *CategoryService) GetCategoryByID(id uint) (*responses.CategoryResponse, error) {
+    category, err := s.categoryRepo.GetCategoryByID(id)
+    if err != nil {
+        return nil, err
+    }
+
+    return &responses.CategoryResponse{
+        ID:        category.ID,
+        Name:      category.Name,
+        Slug:      category.Slug,
+        CreatedAt: category.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt: category.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }, nil
+}
+
+// GetAllCategories mengambil semua categories dengan pagination
+func (s *CategoryService) GetAllCategories(page, limit int) (*responses.CategoryListResponse, error) {
+    categories, total, err := s.categoryRepo.GetAllCategories(page, limit)
+    if err != nil {
+        return nil, errors.New("failed to get categories")
+    }
+
+    return &responses.CategoryListResponse{
+        Categories: responses.ConvertCategoriesToResponse(categories),
+        Total:      int(total),
+        Page:       page,
+        Limit:      limit,
+    }, nil
+}
+
+// UpdateCategory mengupdate category berdasarkan ID
+func (s *CategoryService) UpdateCategory(id uint, req requests.UpdateCategoryRequest) (*responses.CategoryResponse, error) {
+    // Cek apakah category ada
+    existingCategory, err := s.categoryRepo.GetCategoryByID(id)
+    if err != nil {
+        return nil, err
+    }
+
+    // Cek apakah nama category sudah ada (exclude current category)
+    exists, err := s.categoryRepo.CheckCategoryExists(req.Name, id)
+    if err != nil {
+        return nil, errors.New("failed to check category existence")
+    }
+    if exists {
+        return nil, errors.New("category name already exists")
+    }
+
+    // Update category
+    existingCategory.Name = req.Name
+    if err := s.categoryRepo.UpdateCategory(id, existingCategory); err != nil {
+        return nil, errors.New("failed to update category")
+    }
+
+    // Get updated category
+    updatedCategory, err := s.categoryRepo.GetCategoryByID(id)
+    if err != nil {
+        return nil, errors.New("failed to get updated category")
+    }
+
+    return &responses.CategoryResponse{
+        ID:        updatedCategory.ID,
+        Name:      updatedCategory.Name,
+        Slug:      updatedCategory.Slug,
+        CreatedAt: updatedCategory.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt: updatedCategory.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }, nil
+}
+
+// DeleteCategory menghapus category berdasarkan ID
+func (s *CategoryService) DeleteCategory(id uint) error {
+    // Cek apakah category ada
+    _, err := s.categoryRepo.GetCategoryByID(id)
+    if err != nil {
+        return err
+    }
+
+    // Hapus category
+    if err := s.categoryRepo.DeleteCategory(id); err != nil {
+        return errors.New("failed to delete category")
+    }
+
+    return nil
+}</code></pre>
+
+                    <h4>Penjelasan Category Service:</h4>
+                    <ul>
+                        <li><strong>CreateCategory:</strong> Business logic untuk membuat kategori baru</li>
+                        <li><strong>GetCategoryByID:</strong> Mengambil kategori berdasarkan ID</li>
+                        <li><strong>GetAllCategories:</strong> Mengambil semua kategori dengan pagination</li>
+                        <li><strong>UpdateCategory:</strong> Business logic untuk update kategori</li>
+                        <li><strong>DeleteCategory:</strong> Business logic untuk hapus kategori</li>
+                        <li><strong>Validation:</strong> Cek duplikasi nama kategori</li>
+                    </ul>
+
+                    <h3>📝 Langkah 6: Buat Category Handler</h3>
+                    <p>Buat file <code>handlers/category_handler.go</code> untuk HTTP handlers:</p>
+
+                    <pre><code>package handlers
+
+import (
+    "net/http"
+    "strconv"
+    "tokogo/requests"
+    "tokogo/responses"
+    "tokogo/services"
+
+    "github.com/gin-gonic/gin"
+)
+
+type CategoryHandler struct {
+    categoryService *services.CategoryService
+}
+
+// NewCategoryHandler membuat instance baru CategoryHandler
+func NewCategoryHandler() *CategoryHandler {
+    return &CategoryHandler{
+        categoryService: services.NewCategoryService(),
+    }
+}
+
+// CreateCategory handler untuk membuat category baru
+func (h *CategoryHandler) CreateCategory(c *gin.Context) {
+    var req requests.CreateCategoryRequest
+
+    // Bind dan validasi request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validasi menggunakan method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Panggil service untuk create category
+    categoryResponse, err := h.categoryService.CreateCategory(req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "create_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusCreated, responses.SuccessResponse{
+        Message: "Category created successfully",
+        Data:    categoryResponse,
+    })
+}
+
+// GetCategoryByID handler untuk mengambil category berdasarkan ID
+func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
+    // Ambil ID dari URL parameter
+    idStr := c.Param("id")
+    id, err := strconv.ParseUint(idStr, 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "invalid_id",
+            Message: "Invalid category ID",
+        })
+        return
+    }
+
+    // Panggil service untuk get category
+    categoryResponse, err := h.categoryService.GetCategoryByID(uint(id))
+    if err != nil {
+        c.JSON(http.StatusNotFound, responses.ErrorResponse{
+            Error:   "category_not_found",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Category retrieved successfully",
+        Data:    categoryResponse,
+    })
+}
+
+// GetAllCategories handler untuk mengambil semua categories
+func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
+    // Ambil query parameters untuk pagination
+    pageStr := c.DefaultQuery("page", "1")
+    limitStr := c.DefaultQuery("limit", "10")
+
+    page, err := strconv.Atoi(pageStr)
+    if err != nil || page < 1 {
+        page = 1
+    }
+
+    limit, err := strconv.Atoi(limitStr)
+    if err != nil || limit < 1 || limit > 100 {
+        limit = 10
+    }
+
+    // Panggil service untuk get all categories
+    categoriesResponse, err := h.categoryService.GetAllCategories(page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+            Error:   "get_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Categories retrieved successfully",
+        Data:    categoriesResponse,
+    })
+}
+
+// UpdateCategory handler untuk mengupdate category
+func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
+    // Ambil ID dari URL parameter
+    idStr := c.Param("id")
+    id, err := strconv.ParseUint(idStr, 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "invalid_id",
+            Message: "Invalid category ID",
+        })
+        return
+    }
+
+    var req requests.UpdateCategoryRequest
+
+    // Bind dan validasi request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validasi menggunakan method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Panggil service untuk update category
+    categoryResponse, err := h.categoryService.UpdateCategory(uint(id), req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "update_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Category updated successfully",
+        Data:    categoryResponse,
+    })
+}
+
+// DeleteCategory handler untuk menghapus category
+func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
+    // Ambil ID dari URL parameter
+    idStr := c.Param("id")
+    id, err := strconv.ParseUint(idStr, 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "invalid_id",
+            Message: "Invalid category ID",
+        })
+        return
+    }
+
+    // Panggil service untuk delete category
+    err = h.categoryService.DeleteCategory(uint(id))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "delete_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Category deleted successfully",
+        Data:    nil,
+    })
+}</code></pre>
+
+                    <h4>Penjelasan Category Handler:</h4>
+                    <ul>
+                        <li><strong>CreateCategory:</strong> HTTP handler untuk membuat kategori baru</li>
+                        <li><strong>GetCategoryByID:</strong> HTTP handler untuk mengambil kategori berdasarkan ID</li>
+                        <li><strong>GetAllCategories:</strong> HTTP handler untuk mengambil semua kategori dengan pagination</li>
+                        <li><strong>UpdateCategory:</strong> HTTP handler untuk update kategori</li>
+                        <li><strong>DeleteCategory:</strong> HTTP handler untuk hapus kategori</li>
+                        <li><strong>Error Handling:</strong> Proper error handling untuk setiap endpoint</li>
+                    </ul>
+
+                    <h3>📝 Langkah 7: Update Main.go untuk Category Routes</h3>
+                    <p>Update file <code>main.go</code> untuk menambahkan category routes:</p>
+
+                    <pre><code>package main
+
+import (
+    "log"
+    "tokogo/config"
+    "tokogo/handlers"
+    "tokogo/middlewares"
+
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+)
+
+func main() {
+    // Load environment variables
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, using system environment variables")
+    }
+
+    // Initialize database
+    config.InitDB()
+
+    // Setup Gin router
+    r := gin.Default()
+
+    // CORS middleware
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"*"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"*"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
+
+    // Initialize handlers
+    authHandler := handlers.NewAuthHandler()
+    categoryHandler := handlers.NewCategoryHandler()
+
+    // Public routes (tidak perlu authentication)
+    api := r.Group("/api/v1")
+    {
+        // Auth routes
+        auth := api.Group("/auth")
+        {
+            auth.POST("/register", authHandler.Register)
+            auth.POST("/login", authHandler.Login)
+        }
+    }
+
+    // Protected routes (perlu authentication)
+    protected := r.Group("/api/v1")
+    protected.Use(middlewares.AuthMiddleware())
+    {
+        // Auth protected routes
+        auth := protected.Group("/auth")
+        {
+            auth.POST("/logout", authHandler.Logout)
+            auth.GET("/profile", authHandler.GetProfile)
+        }
+
+        // Admin routes (perlu admin role)
+        admin := protected.Group("/admin")
+        admin.Use(middlewares.AdminMiddleware())
+        {
+            admin.GET("/dashboard", func(c *gin.Context) {
+                c.JSON(200, gin.H{
+                    "message": "Welcome to admin dashboard",
+                    "user_id": c.GetUint("user_id"),
+                })
+            })
+
+            // Category CRUD routes (admin only)
+            categories := admin.Group("/categories")
+            {
+                categories.POST("", categoryHandler.CreateCategory)
+                categories.GET("", categoryHandler.GetAllCategories)
+                categories.GET("/:id", categoryHandler.GetCategoryByID)
+                categories.PUT("/:id", categoryHandler.UpdateCategory)
+                categories.DELETE("/:id", categoryHandler.DeleteCategory)
+            }
+        }
+    }
+
+    // Start server
+    port := config.GetEnv("SERVER_PORT", "8080")
+    log.Printf("Server starting on port %s", port)
+    r.Run(":" + port)
+}</code></pre>
+
+                    <h4>Penjelasan Main.go Update:</h4>
+                    <ul>
+                        <li><strong>Category Handler:</strong> Initialize categoryHandler</li>
+                        <li><strong>Admin Routes:</strong> Category routes dalam admin group</li>
+                        <li><strong>CRUD Endpoints:</strong> POST, GET, PUT, DELETE untuk categories</li>
+                        <li><strong>Middleware Chain:</strong> AuthMiddleware -> AdminMiddleware</li>
+                        <li><strong>Route Structure:</strong> /api/v1/admin/categories</li>
+                    </ul>
+
+                    <h3>📝 Langkah 8: Update Database Config untuk AutoMigrate</h3>
+                    <p>Update file <code>config/database.go</code> untuk menambahkan Category model:</p>
+
+                    <pre><code>package config
+
+import (
+    "fmt"
+    "log"
+    "os"
+    "tokogo/models"
+
+    "gorm.io/driver/mysql"
+    "gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+// InitDB menginisialisasi koneksi database
+func InitDB() {
+    var err error
+
+    // Konfigurasi database dari environment variables
+    dbHost := GetEnv("DB_HOST", "localhost")
+    dbPort := GetEnv("DB_PORT", "3306")
+    dbUser := GetEnv("DB_USER", "root")
+    dbPassword := GetEnv("DB_PASSWORD", "")
+    dbName := GetEnv("DB_NAME", "tokogo")
+
+    // Buat DSN (Data Source Name)
+    dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+        dbUser, dbPassword, dbHost, dbPort, dbName)
+
+    // Koneksi ke database
+    DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatal("Failed to connect to database:", err)
+    }
+
+    log.Println("Database connected successfully")
+
+    // Auto migrate models
+    err = DB.AutoMigrate(
+        &models.User{},
+        &models.Category{},
+    )
+    if err != nil {
+        log.Fatal("Failed to migrate database:", err)
+    }
+
+    log.Println("Database migrated successfully")
+}
+
+// GetDB mengembalikan instance database
+func GetDB() *gorm.DB {
+    return DB
+}
+
+// GetEnv mengambil environment variable dengan default value
+func GetEnv(key, defaultValue string) string {
+    if value := os.Getenv(key); value != "" {
+        return value
+    }
+    return defaultValue
+}</code></pre>
+
+                    <h4>Penjelasan Database Config Update:</h4>
+                    <ul>
+                        <li><strong>AutoMigrate:</strong> Menambahkan &models.Category{} ke AutoMigrate</li>
+                        <li><strong>Table Creation:</strong> GORM akan membuat tabel categories otomatis</li>
+                        <li><strong>Schema Sync:</strong> Database schema akan sync dengan model</li>
+                    </ul>
+
+                    <h3>🧪 Testing API Category CRUD</h3>
+                    <p>Sekarang mari kita test API category CRUD yang sudah kita buat:</p>
+
+                    <h4>1. Login sebagai Admin (untuk mendapatkan token)</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "adminpassword"
+}</code></pre>
+
+                    <h4>2. Create Category</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/admin/categories
+Authorization: Bearer {admin_jwt_token}
+Content-Type: application/json
+
+{
+    "name": "Electronics"
+}</code></pre>
+
+                    <h4>Response Sukses (201 Created):</h4>
+                    <pre><code>{
+    "message": "Category created successfully",
+    "data": {
+        "id": 1,
+        "name": "Electronics",
+        "slug": "electronics",
+        "created_at": "2024-01-15 10:30:00",
+        "updated_at": "2024-01-15 10:30:00"
+    }
+}</code></pre>
+
+                    <h4>3. Get All Categories</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/admin/categories?page=1&limit=10
+Authorization: Bearer {admin_jwt_token}</code></pre>
+
+                    <h4>4. Get Category by ID</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/admin/categories/1
+Authorization: Bearer {admin_jwt_token}</code></pre>
+
+                    <h4>5. Update Category</h4>
+                    <pre><code>PUT http://localhost:8080/api/v1/admin/categories/1
+Authorization: Bearer {admin_jwt_token}
+Content-Type: application/json
+
+{
+    "name": "Electronic Devices"
+}</code></pre>
+
+                    <h4>6. Delete Category</h4>
+                    <pre><code>DELETE http://localhost:8080/api/v1/admin/categories/1
+Authorization: Bearer {admin_jwt_token}</code></pre>
+
+                    <h4>Response Sukses (200 OK):</h4>
+                    <pre><code>{
+    "message": "Category deleted successfully",
+    "data": null
+}</code></pre>
+
+                    <h4>7. Test dengan Customer Role (403 Forbidden)</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/admin/categories
+Authorization: Bearer {customer_jwt_token}
+Content-Type: application/json
+
+{
+    "name": "Test Category"
+}</code></pre>
+
+                    <h4>Response Error (403 Forbidden):</h4>
+                    <pre><code>{
+    "error": "forbidden",
+    "message": "Admin access required"
+}</code></pre>
+
+                    <h3>✅ Checklist Implementasi Category CRUD</h3>
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>File yang Harus Dibuat:</h4>
+                        <ul>
+                            <li>✅ models/category.go (Category model)</li>
+                            <li>✅ requests/category_request.go (Request structs)</li>
+                            <li>✅ responses/category_response.go (Response structs)</li>
+                            <li>✅ repositories/category_repository.go (Database operations)</li>
+                            <li>✅ services/category_service.go (Business logic)</li>
+                            <li>✅ handlers/category_handler.go (HTTP handlers)</li>
+                        </ul>
+                        
+                        <h4>File yang Harus Diupdate:</h4>
+                        <ul>
+                            <li>✅ config/database.go (AutoMigrate Category)</li>
+                            <li>✅ main.go (Category routes)</li>
+                        </ul>
+                    </div>
+
+                    <h3>🚀 Cara Menjalankan</h3>
+                    <ol>
+                        <li>Pastikan MySQL sudah berjalan</li>
+                        <li>Pastikan database 'tokogo' sudah dibuat</li>
+                        <li>Pastikan ada user dengan role admin</li>
+                        <li>Jalankan: <code>go run main.go</code></li>
+                        <li>Test dengan Postman atau curl</li>
+                    </ol>
+
+                    <h3>🎯 Fitur Category CRUD yang Sudah Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ Create Category dengan validasi nama</li>
+                        <li>✅ Read Category (Get by ID, Get All dengan pagination)</li>
+                        <li>✅ Update Category dengan validasi nama</li>
+                        <li>✅ Delete Category (soft delete)</li>
+                        <li>✅ Auto-generate slug dari nama</li>
+                        <li>✅ Duplicate name validation</li>
+                        <li>✅ Admin-only access control</li>
+                        <li>✅ Pagination support</li>
+                    </ul>
+
+                    <h3>🔒 Keamanan yang Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ Admin-only access dengan AdminMiddleware</li>
+                        <li>✅ JWT token validation</li>
+                        <li>✅ Input validation dengan go-playground/validator</li>
+                        <li>✅ SQL injection protection (GORM)</li>
+                        <li>✅ Soft delete untuk data integrity</li>
+                        <li>✅ Duplicate name prevention</li>
+                        <li>✅ Proper error handling</li>
+                    </ul>
+
+                    <h3>🎉 Selamat!</h3>
+                    <p>Anda telah berhasil mengimplementasikan modul CRUD Kategori yang lengkap! Sistem manajemen kategori sudah siap untuk digunakan dan hanya bisa diakses oleh admin. Fitur ini dapat diintegrasikan dengan modul Product Management di bab selanjutnya.</p>
+
+                    <div style="text-align: center; margin: 3rem 0;">
+                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; color: #2c3e50; padding: 2rem; border-radius: 5px; display: inline-block;">
+                            <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Siap untuk Modul Selanjutnya?</h3>
+                            <p style="color: #495057; margin-bottom: 0;">Dengan sistem CRUD Kategori yang lengkap, Anda siap untuk melanjutkan ke modul Product Management yang akan menggunakan kategori ini!</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter11',
+                title: 'Bab 11: Modul CRUD Product - Role Admin',
+                meta: 'Halaman 11 dari 50 • Dibaca 15 menit',
+                content: `
+                    <h2>📦 Bab 11: Modul CRUD Product - Role Admin</h2>
+                    <p>Selamat! Sekarang kita akan membuat modul CRUD (Create, Read, Update, Delete) untuk Product yang hanya bisa diakses oleh admin. Di bab ini, kita akan mengimplementasikan sistem manajemen produk dengan role-based access control dan relasi dengan kategori.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat sistem CRUD produk yang lengkap dengan Create, Read, Update, Delete operations. Semua endpoint hanya bisa diakses oleh admin. Produk akan memiliki relasi dengan kategori dan fitur manajemen stok.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6-8: Modul Authentication (Register, Login, Logout)</li>
+                        <li>✅ Bab 9: Review Pembelajaran Authentication</li>
+                        <li>✅ Bab 10: Modul CRUD Kategori - Role Admin</li>
+                        <li>✅ Middleware authentication sudah berfungsi</li>
+                        <li>✅ AdminMiddleware sudah diimplementasikan</li>
+                        <li>✅ Tabel categories sudah ada di database</li>
+                    </ul>
+
+                    <h3>🗄️ Database Schema - Tabel Products</h3>
+                    <p>Pertama, kita perlu membuat tabel products dengan struktur sebagai berikut:</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>📊 Struktur Tabel Products</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                            <thead>
+                                <tr style="background-color: #e9ecef;">
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Field</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Type</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Constraint</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">id</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">BIGINT</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">PK, Auto Increment</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Primary key</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">name</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">VARCHAR</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NOT NULL</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Nama produk</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">description</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TEXT</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NULL</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Deskripsi produk</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">purchase_price</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">DECIMAL(10,2)</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NOT NULL</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Harga beli</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">selling_price</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">DECIMAL(10,2)</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NOT NULL</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Harga jual</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">stock</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">INT</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NOT NULL, DEFAULT 0</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Stok produk</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">category_id</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">BIGINT</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">FK → Categories(id)</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">ID kategori</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">image_url</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">VARCHAR(255)</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">NULL</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">URL gambar produk (opsional)</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">created_at</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">DEFAULT CURRENT_TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Waktu dibuat</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">updated_at</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">Waktu diupdate</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4>🔧 SQL untuk Membuat Tabel Products</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>CREATE TABLE products (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    purchase_price DECIMAL(10,2) NOT NULL,
+    selling_price DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    category_id BIGINT NOT NULL,
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);</code></pre>
+
+                    <h3>📁 Struktur File yang Akan Dibuat</h3>
+                    <p>Kita akan membuat file-file berikut untuk modul Product:</p>
+                    <ul>
+                        <li><code>models/product.go</code> - Model Product</li>
+                        <li><code>requests/product_request.go</code> - Request structs</li>
+                        <li><code>responses/product_response.go</code> - Response structs</li>
+                        <li><code>repositories/product_repository.go</code> - Database operations</li>
+                        <li><code>services/product_service.go</code> - Business logic</li>
+                        <li><code>handlers/product_handler.go</code> - HTTP handlers</li>
+                    </ul>
+
+                    <h3>🏗️ Langkah 1: Membuat Model Product</h3>
+                    <p>Buat file <code>models/product.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package models
+
+import "time"
+
+type Product struct {
+    ID            uint      \`json:"id" gorm:"primaryKey"\`
+    Name          string    \`json:"name" gorm:"not null"\`
+    Description   string    \`json:"description"\`
+    PurchasePrice float64   \`json:"purchase_price" gorm:"not null;type:decimal(10,2)"\`
+    SellingPrice  float64   \`json:"selling_price" gorm:"not null;type:decimal(10,2)"\`
+    Stock         int       \`json:"stock" gorm:"not null;default:0"\`
+    CategoryID    uint      \`json:"category_id" gorm:"not null"\`
+    Category      Category  \`json:"category" gorm:"foreignKey:CategoryID"\`
+    ImageURL      string    \`json:"image_url"\`
+    CreatedAt     time.Time \`json:"created_at"\`
+    UpdatedAt     time.Time \`json:"updated_at"\`
+}</code></pre>
+
+                    <h3>📝 Langkah 2: Membuat Request Structs</h3>
+                    <p>Buat file <code>requests/product_request.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package requests
+
+type CreateProductRequest struct {
+    Name          string  \`json:"name" binding:"required,min=3,max=255"\`
+    Description   string  \`json:"description"\`
+    PurchasePrice float64 \`json:"purchase_price" binding:"required,min=0"\`
+    SellingPrice  float64 \`json:"selling_price" binding:"required,min=0"\`
+    Stock         int     \`json:"stock" binding:"min=0"\`
+    CategoryID    uint    \`json:"category_id" binding:"required"\`
+    ImageURL      string  \`json:"image_url"\`
+}
+
+type UpdateProductRequest struct {
+    Name          string  \`json:"name" binding:"required,min=3,max=255"\`
+    Description   string  \`json:"description"\`
+    PurchasePrice float64 \`json:"purchase_price" binding:"required,min=0"\`
+    SellingPrice  float64 \`json:"selling_price" binding:"required,min=0"\`
+    Stock         int     \`json:"stock" binding:"min=0"\`
+    CategoryID    uint    \`json:"category_id" binding:"required"\`
+    ImageURL      string  \`json:"image_url"\`
+}</code></pre>
+
+                    <h3>📤 Langkah 3: Membuat Response Structs</h3>
+                    <p>Buat file <code>responses/product_response.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package responses
+
+import "time"
+
+type ProductResponse struct {
+    ID            uint      \`json:"id"\`
+    Name          string    \`json:"name"\`
+    Description   string    \`json:"description"\`
+    PurchasePrice float64   \`json:"purchase_price"\`
+    SellingPrice  float64   \`json:"selling_price"\`
+    Stock         int       \`json:"stock"\`
+    CategoryID    uint      \`json:"category_id"\`
+    CategoryName  string    \`json:"category_name"\`
+    ImageURL      string    \`json:"image_url"\`
+    CreatedAt     time.Time \`json:"created_at"\`
+    UpdatedAt     time.Time \`json:"updated_at"\`
+}
+
+type ProductListResponse struct {
+    Products []ProductResponse \`json:"products"\`
+    Total    int64             \`json:"total"\`
+    Page     int               \`json:"page"\`
+    Limit    int               \`json:"limit"\`
+}</code></pre>
+
+                    <h3>🗄️ Langkah 4: Membuat Repository</h3>
+                    <p>Buat file <code>repositories/product_repository.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package repositories
+
+import (
+    "tokogo/models"
+    "gorm.io/gorm"
+)
+
+type ProductRepository struct {
+    db *gorm.DB
+}
+
+func NewProductRepository(db *gorm.DB) *ProductRepository {
+    return &ProductRepository{db: db}
+}
+
+func (r *ProductRepository) Create(product *models.Product) error {
+    return r.db.Create(product).Error
+}
+
+func (r *ProductRepository) GetAll(page, limit int) ([]models.Product, int64, error) {
+    var products []models.Product
+    var total int64
+
+    offset := (page - 1) * limit
+
+    // Count total records
+    if err := r.db.Model(&models.Product{}).Count(&total).Error; err != nil {
+        return nil, 0, err
+    }
+
+    // Get products with pagination
+    err := r.db.Preload("Category").
+        Offset(offset).
+        Limit(limit).
+        Find(&products).Error
+
+    return products, total, err
+}
+
+func (r *ProductRepository) GetByID(id uint) (*models.Product, error) {
+    var product models.Product
+    err := r.db.Preload("Category").First(&product, id).Error
+    return &product, err
+}
+
+func (r *ProductRepository) Update(product *models.Product) error {
+    return r.db.Save(product).Error
+}
+
+func (r *ProductRepository) Delete(id uint) error {
+    return r.db.Delete(&models.Product{}, id).Error
+}
+
+func (r *ProductRepository) GetByCategoryID(categoryID uint, page, limit int) ([]models.Product, int64, error) {
+    var products []models.Product
+    var total int64
+
+    offset := (page - 1) * limit
+
+    // Count total records
+    if err := r.db.Model(&models.Product{}).Where("category_id = ?", categoryID).Count(&total).Error; err != nil {
+        return nil, 0, err
+    }
+
+    // Get products with pagination
+    err := r.db.Preload("Category").
+        Where("category_id = ?", categoryID).
+        Offset(offset).
+        Limit(limit).
+        Find(&products).Error
+
+    return products, total, err
+}</code></pre>
+
+                    <h3>⚙️ Langkah 5: Membuat Service</h3>
+                    <p>Buat file <code>services/product_service.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package services
+
+import (
+    "errors"
+    "tokogo/models"
+    "tokogo/repositories"
+    "tokogo/requests"
+    "tokogo/responses"
+)
+
+type ProductService struct {
+    productRepo *repositories.ProductRepository
+    categoryRepo *repositories.CategoryRepository
+}
+
+func NewProductService(productRepo *repositories.ProductRepository, categoryRepo *repositories.CategoryRepository) *ProductService {
+    return &ProductService{
+        productRepo:  productRepo,
+        categoryRepo: categoryRepo,
+    }
+}
+
+func (s *ProductService) CreateProduct(req requests.CreateProductRequest) (*responses.ProductResponse, error) {
+    // Validate category exists
+    _, err := s.categoryRepo.GetByID(req.CategoryID)
+    if err != nil {
+        return nil, errors.New("category not found")
+    }
+
+    product := &models.Product{
+        Name:          req.Name,
+        Description:   req.Description,
+        PurchasePrice: req.PurchasePrice,
+        SellingPrice:  req.SellingPrice,
+        Stock:         req.Stock,
+        CategoryID:    req.CategoryID,
+        ImageURL:      req.ImageURL,
+    }
+
+    if err := s.productRepo.Create(product); err != nil {
+        return nil, err
+    }
+
+    return s.convertToResponse(product), nil
+}
+
+func (s *ProductService) GetAllProducts(page, limit int) (*responses.ProductListResponse, error) {
+    if page < 1 {
+        page = 1
+    }
+    if limit < 1 {
+        limit = 10
+    }
+
+    products, total, err := s.productRepo.GetAll(page, limit)
+    if err != nil {
+        return nil, err
+    }
+
+    var productResponses []responses.ProductResponse
+    for _, product := range products {
+        productResponses = append(productResponses, *s.convertToResponse(&product))
+    }
+
+    return &responses.ProductListResponse{
+        Products: productResponses,
+        Total:    total,
+        Page:     page,
+        Limit:    limit,
+    }, nil
+}
+
+func (s *ProductService) GetProductByID(id uint) (*responses.ProductResponse, error) {
+    product, err := s.productRepo.GetByID(id)
+    if err != nil {
+        return nil, err
+    }
+
+    return s.convertToResponse(product), nil
+}
+
+func (s *ProductService) UpdateProduct(id uint, req requests.UpdateProductRequest) (*responses.ProductResponse, error) {
+    // Get existing product
+    product, err := s.productRepo.GetByID(id)
+    if err != nil {
+        return nil, err
+    }
+
+    // Validate category exists
+    _, err = s.categoryRepo.GetByID(req.CategoryID)
+    if err != nil {
+        return nil, errors.New("category not found")
+    }
+
+    // Update product fields
+    product.Name = req.Name
+    product.Description = req.Description
+    product.PurchasePrice = req.PurchasePrice
+    product.SellingPrice = req.SellingPrice
+    product.Stock = req.Stock
+    product.CategoryID = req.CategoryID
+    product.ImageURL = req.ImageURL
+
+    if err := s.productRepo.Update(product); err != nil {
+        return nil, err
+    }
+
+    return s.convertToResponse(product), nil
+}
+
+func (s *ProductService) DeleteProduct(id uint) error {
+    // Check if product exists
+    _, err := s.productRepo.GetByID(id)
+    if err != nil {
+        return err
+    }
+
+    return s.productRepo.Delete(id)
+}
+
+func (s *ProductService) GetProductsByCategory(categoryID uint, page, limit int) (*responses.ProductListResponse, error) {
+    if page < 1 {
+        page = 1
+    }
+    if limit < 1 {
+        limit = 10
+    }
+
+    products, total, err := s.productRepo.GetByCategoryID(categoryID, page, limit)
+    if err != nil {
+        return nil, err
+    }
+
+    var productResponses []responses.ProductResponse
+    for _, product := range products {
+        productResponses = append(productResponses, *s.convertToResponse(&product))
+    }
+
+    return &responses.ProductListResponse{
+        Products: productResponses,
+        Total:    total,
+        Page:     page,
+        Limit:    limit,
+    }, nil
+}
+
+func (s *ProductService) convertToResponse(product *models.Product) *responses.ProductResponse {
+    return &responses.ProductResponse{
+        ID:            product.ID,
+        Name:          product.Name,
+        Description:   product.Description,
+        PurchasePrice: product.PurchasePrice,
+        SellingPrice:  product.SellingPrice,
+        Stock:         product.Stock,
+        CategoryID:    product.CategoryID,
+        CategoryName:  product.Category.Name,
+        ImageURL:      product.ImageURL,
+        CreatedAt:     product.CreatedAt,
+        UpdatedAt:     product.UpdatedAt,
+    }
+}</code></pre>
+
+                    <h3>🌐 Langkah 6: Membuat Handler</h3>
+                    <p>Buat file <code>handlers/product_handler.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>package handlers
+
+import (
+    "net/http"
+    "strconv"
+    "tokogo/requests"
+    "tokogo/services"
+
+    "github.com/gin-gonic/gin"
+)
+
+type ProductHandler struct {
+    productService *services.ProductService
+}
+
+func NewProductHandler(productService *services.ProductService) *ProductHandler {
+    return &ProductHandler{
+        productService: productService,
+    }
+}
+
+// CreateProduct godoc
+// @Summary Create a new product
+// @Description Create a new product (Admin only)
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param product body requests.CreateProductRequest true "Product data"
+// @Success 201 {object} responses.ProductResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /admin/products [post]
+func (h *ProductHandler) CreateProduct(c *gin.Context) {
+    var req requests.CreateProductRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    product, err := h.productService.CreateProduct(req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusCreated, product)
+}
+
+// GetAllProducts godoc
+// @Summary Get all products
+// @Description Get all products with pagination (Admin only)
+// @Tags Products
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.ProductListResponse
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /admin/products [get]
+func (h *ProductHandler) GetAllProducts(c *gin.Context) {
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+    products, err := h.productService.GetAllProducts(page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, products)
+}
+
+// GetProductByID godoc
+// @Summary Get product by ID
+// @Description Get a specific product by ID (Admin only)
+// @Tags Products
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} responses.ProductResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /admin/products/{id} [get]
+func (h *ProductHandler) GetProductByID(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    product, err := h.productService.GetProductByID(uint(id))
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, product)
+}
+
+// UpdateProduct godoc
+// @Summary Update product
+// @Description Update a product by ID (Admin only)
+// @Tags Products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param product body requests.UpdateProductRequest true "Product data"
+// @Success 200 {object} responses.ProductResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /admin/products/{id} [put]
+func (h *ProductHandler) UpdateProduct(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    var req requests.UpdateProductRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    product, err := h.productService.UpdateProduct(uint(id), req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, product)
+}
+
+// DeleteProduct godoc
+// @Summary Delete product
+// @Description Delete a product by ID (Admin only)
+// @Tags Products
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /admin/products/{id} [delete]
+func (h *ProductHandler) DeleteProduct(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    err = h.productService.DeleteProduct(uint(id))
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
+}
+
+// GetProductsByCategory godoc
+// @Summary Get products by category
+// @Description Get products by category ID with pagination (Admin only)
+// @Tags Products
+// @Produce json
+// @Param category_id path int true "Category ID"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.ProductListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /admin/categories/{category_id}/products [get]
+func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
+    categoryID, err := strconv.ParseUint(c.Param("category_id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+        return
+    }
+
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+    products, err := h.productService.GetProductsByCategory(uint(categoryID), page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, products)
+}</code></pre>
+
+                    <h3>🔗 Langkah 7: Update main.go</h3>
+                    <p>Tambahkan routes untuk product di <code>main.go</code>:</p>
+
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>// Import tambahan
+import (
+    "tokogo/handlers"
+    "tokogo/repositories"
+    "tokogo/services"
+    // ... existing imports
+)
+
+// Di dalam fungsi main(), tambahkan setelah category routes:
+// Product routes (Admin only)
+productRepo := repositories.NewProductRepository(db)
+productService := services.NewProductService(productRepo, categoryRepo)
+productHandler := handlers.NewProductHandler(productService)
+
+adminRoutes := r.Group("/admin")
+adminRoutes.Use(middlewares.AuthMiddleware())
+adminRoutes.Use(middlewares.AdminMiddleware())
+
+// Product routes
+adminRoutes.POST("/products", productHandler.CreateProduct)
+adminRoutes.GET("/products", productHandler.GetAllProducts)
+adminRoutes.GET("/products/:id", productHandler.GetProductByID)
+adminRoutes.PUT("/products/:id", productHandler.UpdateProduct)
+adminRoutes.DELETE("/products/:id", productHandler.DeleteProduct)
+adminRoutes.GET("/categories/:category_id/products", productHandler.GetProductsByCategory)</code></pre>
+
+                    <h3>🧪 Testing dengan Postman</h3>
+                    <p>Sekarang kita akan test semua endpoint product. Pastikan Anda sudah login sebagai admin dan mendapatkan JWT token.</p>
+
+                    <h4>1. Create Product</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>POST /admin/products
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+Body:
+{
+    "name": "Laptop Gaming ASUS",
+    "description": "Laptop gaming dengan spesifikasi tinggi",
+    "purchase_price": 8000000,
+    "selling_price": 10000000,
+    "stock": 5,
+    "category_id": 1,
+    "image_url": "https://example.com/laptop.jpg"
+}</code></pre>
+
+                    <h4>2. Get All Products</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>GET /admin/products?page=1&limit=10
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>3. Get Product by ID</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>GET /admin/products/1
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>4. Update Product</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>PUT /admin/products/1
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+Body:
+{
+    "name": "Laptop Gaming ASUS ROG",
+    "description": "Laptop gaming dengan spesifikasi tinggi dan RGB keyboard",
+    "purchase_price": 8500000,
+    "selling_price": 10500000,
+    "stock": 3,
+    "category_id": 1,
+    "image_url": "https://example.com/laptop-rog.jpg"
+}</code></pre>
+
+                    <h4>5. Delete Product</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>DELETE /admin/products/1
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>6. Get Products by Category</h4>
+                    <pre style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1rem; border-radius: 5px; overflow-x: auto;"><code>GET /admin/categories/1/products?page=1&limit=10
+Headers:
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h3>✅ Checklist Implementasi</h3>
+                    <p>Pastikan Anda telah menyelesaikan semua langkah berikut:</p>
+                    <ul>
+                        <li>✅ Membuat tabel products di database</li>
+                        <li>✅ Membuat model Product di models/product.go</li>
+                        <li>✅ Membuat request structs di requests/product_request.go</li>
+                        <li>✅ Membuat response structs di responses/product_response.go</li>
+                        <li>✅ Membuat repository di repositories/product_repository.go</li>
+                        <li>✅ Membuat service di services/product_service.go</li>
+                        <li>✅ Membuat handler di handlers/product_handler.go</li>
+                        <li>✅ Menambahkan routes di main.go</li>
+                        <li>✅ Test semua endpoint dengan Postman</li>
+                    </ul>
+
+                    <h3>🎯 Fitur yang Telah Diimplementasikan</h3>
+                    <ul>
+                        <li>✅ <strong>Create Product</strong> - Membuat produk baru dengan validasi</li>
+                        <li>✅ <strong>Read Products</strong> - Melihat daftar produk dengan pagination</li>
+                        <li>✅ <strong>Read Product by ID</strong> - Melihat detail produk berdasarkan ID</li>
+                        <li>✅ <strong>Update Product</strong> - Mengupdate data produk</li>
+                        <li>✅ <strong>Delete Product</strong> - Menghapus produk</li>
+                        <li>✅ <strong>Get Products by Category</strong> - Melihat produk berdasarkan kategori</li>
+                        <li>✅ <strong>Admin Role Protection</strong> - Semua endpoint hanya bisa diakses admin</li>
+                        <li>✅ <strong>Input Validation</strong> - Validasi input menggunakan Gin binding</li>
+                        <li>✅ <strong>Database Relations</strong> - Relasi dengan tabel categories</li>
+                        <li>✅ <strong>Error Handling</strong> - Penanganan error yang baik</li>
+                    </ul>
+
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4 style="color: #155724; margin-bottom: 1rem;">🎉 Selamat! Modul CRUD Product Telah Selesai</h4>
+                        <p style="color: #155724; margin-bottom: 0;">Anda telah berhasil mengimplementasikan sistem CRUD Product yang lengkap dengan role-based access control. Sistem ini siap untuk digunakan dalam aplikasi toko online Anda!</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 5px;">
+                        <h4>🎯 Preview Bab 12: Modul CRUD Customer - Role Admin</h4>
+                        <p>Di bab selanjutnya, kita akan:</p>
+                        <ul>
+                            <li>Membuat sistem CRUD Customer untuk admin</li>
+                            <li>Implementasi manajemen data pelanggan</li>
+                            <li>Validasi dan keamanan data customer</li>
+                            <li>Testing endpoint customer dengan Postman</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;">Dengan sistem CRUD Product yang lengkap, Anda siap untuk melanjutkan ke modul Customer Management!</p>
                     </div>
                 `
             }
