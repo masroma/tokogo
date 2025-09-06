@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"tokogo/models"
@@ -49,8 +50,15 @@ func InitDB() {
 	sqlDB.SetConnMaxLifetime(time.Hour) // Maksimal 1 jam lifetime
 
 	// Auto migrate model User (akan kita buat di bab selanjutnya)
-	if err := DB.AutoMigrate(&models.User{}); err != nil {
-		panic(fmt.Sprintf("AutoMigrate failed: %v", err))
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Category{},
+		&models.Product{},
+	)
+	if err != nil {
+		log.Fatal("Failed to migrate database:", err)
 	}
+
+	log.Println("Database migrated successfully")
 
 }

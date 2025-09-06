@@ -32,8 +32,15 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// Static file serving for uploaded images
+	r.Static("/uploads", "./uploads")
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler()
+	categoryHandler := handlers.NewCategoryHandler()
+	productHandler := handlers.NewProductHandler()
+	userManagementHandler := handlers.NewUserManagementHandler()
+	transactionHandler := handlers.NewTransactionHandler()
 
 	// Public routes (tidak perlu authentication)
 	api := r.Group("/api/v1")
@@ -67,6 +74,41 @@ func main() {
 					"user_id": c.GetUint("user_id"),
 				})
 			})
+
+			categories := admin.Group("/categories")
+			{
+				categories.POST("", categoryHandler.CreateCategory)
+				categories.GET("", categoryHandler.GetAllCategories)
+				categories.GET("/:id", categoryHandler.GetCategoryByID)
+				categories.PUT("/:id", categoryHandler.UpdateCategory)
+				categories.DELETE("/:id", categoryHandler.DeleteCategory)
+			}
+
+			products := admin.Group("/products")
+			{
+				products.POST("", productHandler.CreateProduct)
+				products.GET("", productHandler.GetAllProducts)
+				products.GET("/:id", productHandler.GetProductByID)
+				products.PUT("/:id", productHandler.UpdateProduct)
+				products.DELETE("/:id", productHandler.DeleteProduct)
+				products.GET("/categories/:category_id", productHandler.GetProductsByCategory)
+			}
+
+			userManagement := admin.Group("/user-management")
+			{
+				userManagement.POST("", userManagementHandler.CreateUser)
+				userManagement.GET("", userManagementHandler.GetAllUsers)
+				userManagement.GET("/:id", userManagementHandler.GetUserByID)
+				userManagement.PUT("/:id", userManagementHandler.UpdateUser)
+				userManagement.DELETE("/:id", userManagementHandler.DeleteUser)
+			}
+
+			transactions := admin.Group("/transactions")
+			{
+				transactions.GET("", transactionHandler.GetAllTransactions)
+				transactions.GET("/:id", transactionHandler.GetTransactionByID)
+				transactions.PUT("/:id/status", transactionHandler.UpdateTransactionStatus)
+			}
 		}
 	}
 
