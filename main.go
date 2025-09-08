@@ -41,6 +41,9 @@ func main() {
 	productHandler := handlers.NewProductHandler()
 	userManagementHandler := handlers.NewUserManagementHandler()
 	transactionHandler := handlers.NewTransactionHandler()
+	profileHandler := handlers.NewProfileHandler()
+	cartHandler := handlers.NewCartHandler()
+	checkoutHandler := handlers.NewCheckoutHandler()
 
 	// Public routes (tidak perlu authentication)
 	api := r.Group("/api/v1")
@@ -50,6 +53,23 @@ func main() {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
+		}
+
+		// Public routes (untuk customer)
+		public := api.Group("/public")
+		{
+			categories := public.Group("/categories")
+			{
+				categories.GET("", categoryHandler.GetAllCategories)
+			}
+
+			products := public.Group("/products")
+			{
+				products.GET("", productHandler.GetAllProductsPublic)
+				products.GET("/:id", productHandler.GetProductByIDPublic)
+				products.GET("/categories/:category_id", productHandler.GetProductsByCategoryPublic)
+			}
+
 		}
 	}
 
@@ -62,12 +82,37 @@ func main() {
 		{
 			auth.POST("/logout", authHandler.Logout)
 			auth.GET("/profile", authHandler.GetProfile)
+			auth.GET("/profile", profileHandler.GetProfile)
+			auth.PUT("/profile", profileHandler.UpdateProfile)
+			auth.PUT("/change-password", profileHandler.ChangeUserPassword)
+		}
+
+		// Cart routes (customer only)
+		cart := protected.Group("/cart")
+		{
+			cart.POST("", cartHandler.AddToCart)
+			cart.GET("", cartHandler.GetCart)
+			cart.PUT("/:product_id", cartHandler.UpdateCartItem)
+			cart.DELETE("/:product_id", cartHandler.RemoveFromCart)
+			cart.DELETE("/clear", cartHandler.ClearCart)
+			cart.GET("/count", cartHandler.GetCartItemCount)
+		}
+
+		// Checkout routes (customer only)
+		checkout := protected.Group("/checkout")
+		{
+			checkout.POST("/summary", checkoutHandler.GetCheckoutSummary)
+			checkout.POST("", checkoutHandler.ProcessCheckout)
+			checkout.POST("/:transaction_id/confirm", checkoutHandler.ConfirmPayment)
+			checkout.GET("/transactions", checkoutHandler.GetUserTransactions)
+			checkout.GET("/transactions/:transaction_id", checkoutHandler.GetTransactionByID)
 		}
 
 		// Admin routes (perlu admin role)
 		admin := protected.Group("/admin")
 		admin.Use(middlewares.AdminMiddleware())
 		{
+
 			admin.GET("/dashboard", func(c *gin.Context) {
 				c.JSON(200, gin.H{
 					"message": "Welcome to admin dashboard",

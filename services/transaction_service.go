@@ -1,6 +1,7 @@
 package services
 
 import (
+	"tokogo/config"
 	"tokogo/repositories"
 	"tokogo/requests"
 	"tokogo/responses"
@@ -13,7 +14,7 @@ type TransactionService struct {
 // NewTransactionService membuat instance baru TransactionService
 func NewTransactionService() *TransactionService {
 	return &TransactionService{
-		transactionRepo: repositories.NewTransactionRepository(),
+		transactionRepo: repositories.NewTransactionRepository(config.DB),
 	}
 }
 

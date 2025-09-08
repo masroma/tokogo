@@ -3092,7 +3092,7 @@ type AuthRepository struct {
 // NewAuthRepository membuat instance baru AuthRepository
 func NewAuthRepository() *AuthRepository {
     return &AuthRepository{
-        db: config.GetDB(),
+        db: config.DB,
     }
 }
 
@@ -3994,7 +3994,7 @@ type CategoryRepository struct {
 // NewCategoryRepository membuat instance baru CategoryRepository
 func NewCategoryRepository() *CategoryRepository {
     return &CategoryRepository{
-        db: config.GetDB(),
+        db: config.DB,
     }
 }
 
@@ -6336,6 +6336,30 @@ func (r *ChangePasswordRequest) Validate() error {
     return nil
 }</code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Request Structs</h4>
+                        <ul>
+                            <li><strong>CreateUserRequest:</strong> Struct untuk membuat user baru dengan validasi ketat</li>
+                            <li><strong>UpdateUserRequest:</strong> Struct untuk update user dengan field opsional (omitempty)</li>
+                            <li><strong>ChangePasswordRequest:</strong> Struct untuk mengubah password user</li>
+                        </ul>
+                        <p><strong>Validasi yang Digunakan:</strong></p>
+                        <ul>
+                            <li><strong>required:</strong> Field wajib diisi</li>
+                            <li><strong>min=3, max=255:</strong> Panjang string minimal 3, maksimal 255 karakter</li>
+                            <li><strong>email:</strong> Format email yang valid</li>
+                            <li><strong>oneof=customer admin:</strong> Hanya menerima nilai "customer" atau "admin"</li>
+                            <li><strong>omitempty:</strong> Validasi hanya dilakukan jika field tidak kosong</li>
+                        </ul>
+                        <p><strong>Custom Validation:</strong></p>
+                        <ul>
+                            <li><strong>TrimSpace:</strong> Menghapus spasi di awal dan akhir string</li>
+                            <li><strong>Empty Check:</strong> Memastikan field tidak kosong setelah di-trim</li>
+                            <li><strong>Error Messages:</strong> Pesan error yang jelas dan informatif</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Request structs ini memastikan data yang masuk ke sistem sudah valid dan aman, mencegah input yang tidak diinginkan dan memudahkan debugging.</p>
+                    </div>
+
                     <h3>📤 2. Membuat Response Structs</h3>
                     <p>Buat file <code>responses/user_management_response.go</code>:</p>
                     
@@ -6382,6 +6406,36 @@ func ConvertUsersToManagementResponse(users []models.User) []UserManagementRespo
     return responses
 }</code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Response Structs</h4>
+                        <ul>
+                            <li><strong>UserManagementResponse:</strong> Struct untuk response data user individual</li>
+                            <li><strong>UserListResponse:</strong> Struct untuk response list users dengan pagination</li>
+                        </ul>
+                        <p><strong>Field yang Dikembalikan:</strong></p>
+                        <ul>
+                            <li><strong>ID:</strong> Unique identifier user</li>
+                            <li><strong>Name:</strong> Nama lengkap user</li>
+                            <li><strong>Email:</strong> Email address user</li>
+                            <li><strong>Role:</strong> Role user (customer/admin)</li>
+                            <li><strong>CreatedAt/UpdatedAt:</strong> Timestamp dengan format yang konsisten</li>
+                        </ul>
+                        <p><strong>Pagination Fields:</strong></p>
+                        <ul>
+                            <li><strong>Users:</strong> Array data users</li>
+                            <li><strong>Total:</strong> Total jumlah users</li>
+                            <li><strong>Page:</strong> Halaman saat ini</li>
+                            <li><strong>Limit:</strong> Jumlah data per halaman</li>
+                        </ul>
+                        <p><strong>Converter Functions:</strong></p>
+                        <ul>
+                            <li><strong>ConvertUserToManagementResponse:</strong> Konversi single user model ke response</li>
+                            <li><strong>ConvertUsersToManagementResponse:</strong> Konversi multiple users ke response array</li>
+                            <li><strong>Date Formatting:</strong> Format tanggal konsisten "2006-01-02 15:04:05"</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Response structs ini memastikan format data yang konsisten untuk API, memudahkan frontend untuk mengolah data, dan menyembunyikan field sensitif seperti password.</p>
+                    </div>
+
                     <h3>🗄️ 3. Membuat Repository Layer</h3>
                     <p>Buat file <code>repositories/user_management_repository.go</code>:</p>
                     
@@ -6402,7 +6456,7 @@ type UserManagementRepository struct {
 // NewUserManagementRepository membuat instance baru UserManagementRepository
 func NewUserManagementRepository() *UserManagementRepository {
     return &UserManagementRepository{
-        db: config.GetDB(),
+        db: config.DB,
     }
 }
 
@@ -6485,6 +6539,40 @@ func (r *UserManagementRepository) GetUsersByRole(role string, page, limit int) 
 
     return users, total, nil
 }</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Repository Layer</h4>
+                        <ul>
+                            <li><strong>UserManagementRepository:</strong> Struct yang mengelola akses database untuk user management</li>
+                            <li><strong>Database Connection:</strong> Menggunakan GORM untuk operasi database</li>
+                        </ul>
+                        <p><strong>CRUD Operations:</strong></p>
+                        <ul>
+                            <li><strong>CreateUser:</strong> Membuat user baru di database</li>
+                            <li><strong>GetUserByID:</strong> Mengambil user berdasarkan ID dengan GORM First()</li>
+                            <li><strong>GetUserByEmail:</strong> Mengambil user berdasarkan email dengan Where clause</li>
+                            <li><strong>UpdateUser:</strong> Mengupdate user dengan GORM Save()</li>
+                            <li><strong>DeleteUser:</strong> Soft delete user dengan GORM Delete()</li>
+                        </ul>
+                        <p><strong>Advanced Operations:</strong></p>
+                        <ul>
+                            <li><strong>GetAllUsers:</strong> Mengambil semua users dengan pagination (Count + Offset/Limit)</li>
+                            <li><strong>GetUsersByRole:</strong> Filter users berdasarkan role dengan pagination</li>
+                            <li><strong>UpdateUserRole:</strong> Update role user secara langsung dengan Model().Update()</li>
+                        </ul>
+                        <p><strong>Pagination Implementation:</strong></p>
+                        <ul>
+                            <li><strong>Count:</strong> Menghitung total records untuk pagination</li>
+                            <li><strong>Offset:</strong> Menghitung offset berdasarkan page dan limit</li>
+                            <li><strong>Limit:</strong> Membatasi jumlah data yang diambil</li>
+                        </ul>
+                        <p><strong>Error Handling:</strong></p>
+                        <ul>
+                            <li><strong>GORM Errors:</strong> Mengembalikan error dari GORM untuk handling di layer atas</li>
+                            <li><strong>Nil Checks:</strong> Mengembalikan nil jika data tidak ditemukan</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Repository layer ini memisahkan logika database dari business logic, memudahkan testing, dan menyediakan interface yang konsisten untuk operasi database.</p>
+                    </div>
 
                     <h3>⚙️ 4. Membuat Service Layer</h3>
                     <p>Buat file <code>services/user_management_service.go</code>:</p>
@@ -6676,6 +6764,41 @@ func (s *UserManagementService) GetUsersByRole(role string, page, limit int) (*r
         Limit: limit,
     }, nil
 }</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Service Layer</h4>
+                        <ul>
+                            <li><strong>UserManagementService:</strong> Struct yang mengelola business logic untuk user management</li>
+                            <li><strong>Repository Injection:</strong> Menggunakan dependency injection untuk repository</li>
+                        </ul>
+                        <p><strong>Business Logic Operations:</strong></p>
+                        <ul>
+                            <li><strong>CreateUser:</strong> Validasi email unik, hash password, dan buat user baru</li>
+                            <li><strong>GetUserByID:</strong> Ambil user dan konversi ke response format</li>
+                            <li><strong>GetAllUsers:</strong> Validasi pagination dan ambil semua users</li>
+                            <li><strong>UpdateUser:</strong> Validasi email unik dan update user</li>
+                            <li><strong>DeleteUser:</strong> Validasi user exists dan hapus user</li>
+                        </ul>
+                        <p><strong>Security Features:</strong></p>
+                        <ul>
+                            <li><strong>Password Hashing:</strong> Menggunakan bcrypt untuk hash password</li>
+                            <li><strong>Email Uniqueness:</strong> Validasi email tidak boleh duplikat</li>
+                            <li><strong>Role Validation:</strong> Validasi role hanya customer atau admin</li>
+                        </ul>
+                        <p><strong>Data Validation:</strong></p>
+                        <ul>
+                            <li><strong>Pagination Limits:</strong> Page minimal 1, limit maksimal 100</li>
+                            <li><strong>Default Values:</strong> Set default values untuk pagination</li>
+                            <li><strong>Existence Checks:</strong> Validasi user exists sebelum operasi</li>
+                        </ul>
+                        <p><strong>Response Conversion:</strong></p>
+                        <ul>
+                            <li><strong>Model to Response:</strong> Konversi model ke response format</li>
+                            <li><strong>Error Handling:</strong> Custom error messages yang user-friendly</li>
+                            <li><strong>Data Transformation:</strong> Transform data sesuai kebutuhan API</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Service layer ini memisahkan business logic dari data access, memudahkan testing, dan menyediakan interface yang konsisten untuk handler layer.</p>
+                    </div>
 
                     <h3>🎮 5. Membuat Handler Layer</h3>
                     <p>Buat file <code>handlers/user_management_handler.go</code>:</p>
@@ -7375,6 +7498,34 @@ func (r *GetTransactionsRequest) Validate() error {
     return nil
 }</code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Request Structs</h4>
+                        <ul>
+                            <li><strong>UpdateTransactionStatusRequest:</strong> Struct untuk mengupdate status transaksi</li>
+                            <li><strong>GetTransactionsRequest:</strong> Struct untuk mengambil transaksi dengan filter dan pagination</li>
+                        </ul>
+                        <p><strong>Validasi yang Digunakan:</strong></p>
+                        <ul>
+                            <li><strong>required:</strong> Field wajib diisi untuk status update</li>
+                            <li><strong>oneof=pending paid failed expired:</strong> Status hanya menerima nilai yang valid</li>
+                            <li><strong>omitempty:</strong> Validasi hanya dilakukan jika field tidak kosong</li>
+                            <li><strong>min=1, max=100:</strong> Pagination limits untuk mencegah abuse</li>
+                        </ul>
+                        <p><strong>Custom Validation:</strong></p>
+                        <ul>
+                            <li><strong>Status Validation:</strong> Memastikan status tidak kosong setelah trim</li>
+                            <li><strong>Default Values:</strong> Set default values untuk pagination (page=1, limit=10)</li>
+                            <li><strong>Range Validation:</strong> Validasi page minimal 1, limit maksimal 100</li>
+                        </ul>
+                        <p><strong>Business Logic:</strong></p>
+                        <ul>
+                            <li><strong>Status Management:</strong> Mengelola status transaksi (pending → paid/failed/expired)</li>
+                            <li><strong>Filtering:</strong> Memungkinkan filter berdasarkan status transaksi</li>
+                            <li><strong>Pagination:</strong> Mendukung pagination untuk performa yang baik</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Request structs ini memastikan data yang masuk valid, mencegah status yang tidak valid, dan menyediakan pagination yang aman untuk performa sistem.</p>
+                    </div>
+
                     <h3>📤 3. Membuat Response Structs</h3>
                     <p>Buat file <code>responses/transaction_response.go</code>:</p>
                     
@@ -7423,6 +7574,42 @@ type TransactionStatusResponse struct {
     Data    TransactionResponse \`json:"data"\`
 }</code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Response Structs</h4>
+                        <ul>
+                            <li><strong>TransactionResponse:</strong> Struct untuk response data transaksi individual</li>
+                            <li><strong>TransactionDetailResponse:</strong> Struct untuk response detail produk dalam transaksi</li>
+                            <li><strong>TransactionListResponse:</strong> Struct untuk response list transaksi dengan pagination</li>
+                            <li><strong>TransactionStatusResponse:</strong> Struct untuk response update status transaksi</li>
+                        </ul>
+                        <p><strong>Transaction Response Fields:</strong></p>
+                        <ul>
+                            <li><strong>ID:</strong> Unique identifier transaksi</li>
+                            <li><strong>UserID:</strong> ID user yang melakukan transaksi</li>
+                            <li><strong>UserName/UserEmail:</strong> Informasi user untuk kemudahan admin</li>
+                            <li><strong>Status:</strong> Status transaksi (pending/paid/failed/expired)</li>
+                            <li><strong>TotalAmount:</strong> Total harga transaksi</li>
+                            <li><strong>PaymentURL:</strong> URL pembayaran (opsional, omitempty)</li>
+                            <li><strong>Details:</strong> Array detail produk dalam transaksi</li>
+                        </ul>
+                        <p><strong>Transaction Detail Fields:</strong></p>
+                        <ul>
+                            <li><strong>ProductID/ProductName:</strong> Informasi produk yang dibeli</li>
+                            <li><strong>ProductImage:</strong> Gambar produk (opsional)</li>
+                            <li><strong>Quantity:</strong> Jumlah produk yang dibeli</li>
+                            <li><strong>Price:</strong> Harga per unit saat transaksi</li>
+                            <li><strong>Subtotal:</strong> Total harga (quantity × price)</li>
+                        </ul>
+                        <p><strong>Pagination Fields:</strong></p>
+                        <ul>
+                            <li><strong>Transactions:</strong> Array data transaksi</li>
+                            <li><strong>Total:</strong> Total jumlah transaksi</li>
+                            <li><strong>Page/Limit:</strong> Informasi pagination</li>
+                            <li><strong>TotalPages:</strong> Total halaman untuk navigasi</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Response structs ini menyediakan data yang lengkap untuk admin, termasuk informasi user dan detail produk, memudahkan monitoring dan manajemen transaksi.</p>
+                    </div>
+
                     <h3>🗄️ 4. Membuat Repository Layer</h3>
                     <p>Buat file <code>repositories/transaction_repository.go</code>:</p>
                     
@@ -7442,7 +7629,7 @@ type TransactionRepository struct {
 // NewTransactionRepository membuat instance baru TransactionRepository
 func NewTransactionRepository() *TransactionRepository {
     return &TransactionRepository{
-        db: config.GetDB(),
+        db: config.DB,
     }
 }
 
@@ -7497,12 +7684,46 @@ func (r *TransactionRepository) UpdateTransactionStatus(id uint, status string) 
 
 </code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Repository Layer</h4>
+                        <ul>
+                            <li><strong>TransactionRepository:</strong> Struct yang mengelola akses database untuk transaction management</li>
+                            <li><strong>Database Connection:</strong> Menggunakan GORM untuk operasi database</li>
+                        </ul>
+                        <p><strong>Query Operations:</strong></p>
+                        <ul>
+                            <li><strong>GetAllTransactions:</strong> Mengambil semua transaksi dengan pagination dan filter status</li>
+                            <li><strong>GetTransactionByID:</strong> Mengambil transaksi berdasarkan ID dengan preload relasi</li>
+                            <li><strong>UpdateTransactionStatus:</strong> Mengupdate status transaksi secara langsung</li>
+                        </ul>
+                        <p><strong>Advanced Query Features:</strong></p>
+                        <ul>
+                            <li><strong>Preload:</strong> Menggunakan GORM Preload untuk eager loading relasi (User, TransactionDetails, Product)</li>
+                            <li><strong>Dynamic Filtering:</strong> Filter berdasarkan status dengan conditional WHERE clause</li>
+                            <li><strong>Pagination:</strong> Implementasi pagination dengan Count, Offset, dan Limit</li>
+                            <li><strong>Ordering:</strong> Mengurutkan data berdasarkan created_at DESC (terbaru dulu)</li>
+                        </ul>
+                        <p><strong>Performance Optimizations:</strong></p>
+                        <ul>
+                            <li><strong>Eager Loading:</strong> Preload relasi untuk menghindari N+1 query problem</li>
+                            <li><strong>Selective Updates:</strong> Update hanya field yang diperlukan (status)</li>
+                            <li><strong>Efficient Counting:</strong> Count total records untuk pagination</li>
+                        </ul>
+                        <p><strong>Error Handling:</strong></p>
+                        <ul>
+                            <li><strong>GORM Errors:</strong> Mengembalikan error dari GORM untuk handling di layer atas</li>
+                            <li><strong>Nil Checks:</strong> Mengembalikan nil jika data tidak ditemukan</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Repository layer ini menyediakan query yang efisien dengan preload relasi, pagination yang optimal, dan filtering yang fleksibel untuk manajemen transaksi yang kompleks.</p>
+                    </div>
+
                     <h3>⚙️ 5. Membuat Service Layer</h3>
                     <p>Buat file <code>services/transaction_service.go</code>:</p>
                     
                     <pre><code>package services
 
 import (
+    "tokogo/config"
     "tokogo/repositories"
     "tokogo/requests"
     "tokogo/responses"
@@ -7515,7 +7736,7 @@ type TransactionService struct {
 // NewTransactionService membuat instance baru TransactionService
 func NewTransactionService() *TransactionService {
     return &TransactionService{
-        transactionRepo: repositories.NewTransactionRepository(),
+        transactionRepo: repositories.NewTransactionRepository(config.DB),
     }
 }
 
@@ -8057,7 +8278,7 @@ type UpdateProfileRequest struct {
 }
 
 // ChangePasswordRequest represents the request structure for changing password
-type ChangePasswordRequest struct {
+type ChangeUserPasswordRequest struct {
     CurrentPassword string \`json:"current_password" validate:"required"\`
     NewPassword     string \`json:"new_password" validate:"required,min=6,max=255"\`
     ConfirmPassword string \`json:"confirm_password" validate:"required"\`
@@ -8086,7 +8307,7 @@ func (r *UpdateProfileRequest) Validate() error {
 }
 
 // Validate validates the ChangePasswordRequest using the validator
-func (r *ChangePasswordRequest) Validate() error {
+func (r *ChangeUserPasswordRequest) Validate() error {
     validate := validator.New()
 
     // Validasi struct fields
@@ -8122,6 +8343,39 @@ func (r *ChangePasswordRequest) Validate() error {
     return nil
 }</code></pre>
 
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Request Structs</h4>
+                        <ul>
+                            <li><strong>UpdateProfileRequest:</strong> Struct untuk mengupdate profil user (nama dan email)</li>
+                            <li><strong>ChangePasswordRequest:</strong> Struct untuk mengubah password user dengan validasi keamanan</li>
+                        </ul>
+                        <p><strong>Validasi yang Digunakan:</strong></p>
+                        <ul>
+                            <li><strong>required:</strong> Semua field wajib diisi</li>
+                            <li><strong>min=3, max=255:</strong> Panjang string minimal 3, maksimal 255 karakter</li>
+                            <li><strong>email:</strong> Format email yang valid</li>
+                            <li><strong>min=6:</strong> Password minimal 6 karakter</li>
+                        </ul>
+                        <p><strong>Custom Validation untuk Profile:</strong></p>
+                        <ul>
+                            <li><strong>TrimSpace:</strong> Menghapus spasi di awal dan akhir string</li>
+                            <li><strong>Empty Check:</strong> Memastikan field tidak kosong setelah di-trim</li>
+                        </ul>
+                        <p><strong>Custom Validation untuk Password:</strong></p>
+                        <ul>
+                            <li><strong>Password Match:</strong> Memastikan new password dan confirm password sama</li>
+                            <li><strong>Password Different:</strong> Memastikan new password berbeda dengan current password</li>
+                            <li><strong>Empty Validation:</strong> Memastikan semua field password tidak kosong</li>
+                        </ul>
+                        <p><strong>Security Features:</strong></p>
+                        <ul>
+                            <li><strong>Password Confirmation:</strong> User harus konfirmasi password baru</li>
+                            <li><strong>Password Change Prevention:</strong> Mencegah user menggunakan password yang sama</li>
+                            <li><strong>Input Sanitization:</strong> Trim spasi untuk mencegah input yang tidak valid</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Request structs ini memastikan keamanan tinggi untuk perubahan profil dan password, dengan validasi yang ketat untuk mencegah kesalahan user dan serangan keamanan.</p>
+                    </div>
+
                     <h3>📤 2. Membuat Response Structs</h3>
                     <p>Buat file <code>responses/profile_response.go</code>:</p>
                     <pre><code>package responses
@@ -8138,8 +8392,8 @@ type ProfileResponse struct {
     UpdatedAt string \`json:"updated_at"\`
 }
 
-// ChangePasswordResponse struct untuk response change password
-type ChangePasswordResponse struct {
+// ChangeUserPasswordResponse struct untuk response change password
+type ChangeUserPasswordResponse struct {
     Message string \`json:"message"\`
 }
 
@@ -8154,6 +8408,40 @@ func ConvertUserToProfileResponse(user models.User) ProfileResponse {
         UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
     }
 }</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Response Structs</h4>
+                        <ul>
+                            <li><strong>ProfileResponse:</strong> Struct untuk response data profil user</li>
+                            <li><strong>ChangePasswordResponse:</strong> Struct untuk response perubahan password</li>
+                        </ul>
+                        <p><strong>Profile Response Fields:</strong></p>
+                        <ul>
+                            <li><strong>ID:</strong> Unique identifier user</li>
+                            <li><strong>Name:</strong> Nama lengkap user</li>
+                            <li><strong>Email:</strong> Email address user</li>
+                            <li><strong>Role:</strong> Role user (customer/admin)</li>
+                            <li><strong>CreatedAt/UpdatedAt:</strong> Timestamp dengan format yang konsisten</li>
+                        </ul>
+                        <p><strong>Change Password Response:</strong></p>
+                        <ul>
+                            <li><strong>Message:</strong> Pesan konfirmasi perubahan password</li>
+                            <li><strong>No Sensitive Data:</strong> Tidak mengembalikan data sensitif seperti password</li>
+                        </ul>
+                        <p><strong>Converter Function:</strong></p>
+                        <ul>
+                            <li><strong>ConvertUserToProfileResponse:</strong> Konversi model User ke ProfileResponse</li>
+                            <li><strong>Date Formatting:</strong> Format tanggal konsisten "2006-01-02 15:04:05"</li>
+                            <li><strong>Data Mapping:</strong> Mapping field dari model ke response format</li>
+                        </ul>
+                        <p><strong>Security Considerations:</strong></p>
+                        <ul>
+                            <li><strong>Password Exclusion:</strong> Password tidak dikembalikan dalam response</li>
+                            <li><strong>Minimal Data:</strong> Hanya mengembalikan data yang diperlukan</li>
+                            <li><strong>Consistent Format:</strong> Format response yang konsisten untuk frontend</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Response structs ini memastikan keamanan data dengan tidak mengembalikan informasi sensitif, menyediakan format yang konsisten, dan memudahkan frontend untuk menampilkan data profil user.</p>
+                    </div>
 
                     <h3>🗄️ 3. Membuat Repository Layer</h3>
                     <p>Buat file <code>repositories/profile_repository.go</code>:</p>
@@ -8175,7 +8463,7 @@ type ProfileRepository struct {
 // NewProfileRepository membuat instance baru ProfileRepository
 func NewProfileRepository() *ProfileRepository {
     return &ProfileRepository{
-        db: config.GetDB(),
+        db: config.DB,
     }
 }
 
@@ -8215,10 +8503,10 @@ func (r *ProfileRepository) UpdateProfile(userID uint, name, email string) (*mod
     return &user, nil
 }
 
-// ChangePassword mengubah password user
-func (r *ProfileRepository) ChangePassword(userID uint, currentPassword, newPassword string) error {
-    var user models.User
-    
+// ChangeUserPassword mengubah password user
+func (r *ProfileRepository) ChangeUserPassword(userID uint, currentPassword, newPassword string) error {
+        var user models.User
+        
     // Cek apakah user ada
     if err := r.db.First(&user, userID).Error; err != nil {
         return errors.New("user not found")
@@ -8244,6 +8532,40 @@ func (r *ProfileRepository) ChangePassword(userID uint, currentPassword, newPass
     
     return nil
 }</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Repository Layer</h4>
+                        <ul>
+                            <li><strong>ProfileRepository:</strong> Struct yang mengelola akses database untuk profile management</li>
+                            <li><strong>Database Connection:</strong> Menggunakan GORM untuk operasi database</li>
+                        </ul>
+                        <p><strong>Profile Operations:</strong></p>
+                        <ul>
+                            <li><strong>GetProfileByID:</strong> Mengambil profil user berdasarkan ID</li>
+                            <li><strong>UpdateProfile:</strong> Mengupdate profil user (nama dan email)</li>
+                            <li><strong>ChangePassword:</strong> Mengubah password user dengan verifikasi keamanan</li>
+                        </ul>
+                        <p><strong>Security Features:</strong></p>
+                        <ul>
+                            <li><strong>Email Uniqueness:</strong> Validasi email tidak boleh duplikat dengan user lain</li>
+                            <li><strong>Password Verification:</strong> Verifikasi current password sebelum mengubah</li>
+                            <li><strong>Password Hashing:</strong> Hash password baru menggunakan bcrypt</li>
+                            <li><strong>User Existence Check:</strong> Validasi user exists sebelum operasi</li>
+                        </ul>
+                        <p><strong>Data Validation:</strong></p>
+                        <ul>
+                            <li><strong>Email Conflict Check:</strong> Cek email sudah digunakan user lain dengan WHERE clause</li>
+                            <li><strong>Password Comparison:</strong> Compare hash password dengan bcrypt</li>
+                            <li><strong>Atomic Operations:</strong> Operasi database yang atomic untuk konsistensi</li>
+                        </ul>
+                        <p><strong>Error Handling:</strong></p>
+                        <ul>
+                            <li><strong>Custom Error Messages:</strong> Pesan error yang user-friendly</li>
+                            <li><strong>GORM Error Handling:</strong> Handle error dari GORM operations</li>
+                            <li><strong>Security Error Messages:</strong> Error messages yang tidak expose informasi sensitif</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Repository layer ini menyediakan operasi yang aman untuk profile management dengan validasi email unik, verifikasi password, dan error handling yang komprehensif.</p>
+                    </div>
 
                     <h3>⚙️ 4. Membuat Service Layer</h3>
                     <p>Buat file <code>services/profile_service.go</code>:</p>
@@ -8310,6 +8632,39 @@ func (s *ProfileService) ChangePassword(userID uint, req requests.ChangePassword
         Message: "Password changed successfully",
     }, nil
 }</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Service Layer</h4>
+                        <ul>
+                            <li><strong>ProfileService:</strong> Struct yang mengelola business logic untuk profile management</li>
+                            <li><strong>Repository Injection:</strong> Menggunakan dependency injection untuk repository</li>
+                        </ul>
+                        <p><strong>Business Logic Operations:</strong></p>
+                        <ul>
+                            <li><strong>GetProfile:</strong> Mengambil profil user dan konversi ke response format</li>
+                            <li><strong>UpdateProfile:</strong> Validasi request dan update profil user</li>
+                            <li><strong>ChangePassword:</strong> Validasi request dan ubah password user</li>
+                        </ul>
+                        <p><strong>Request Validation:</strong></p>
+                        <ul>
+                            <li><strong>Input Validation:</strong> Validasi semua request menggunakan method Validate()</li>
+                            <li><strong>Business Rules:</strong> Implementasi business rules untuk profile management</li>
+                            <li><strong>Error Propagation:</strong> Propagate error dari repository layer</li>
+                        </ul>
+                        <p><strong>Response Transformation:</strong></p>
+                        <ul>
+                            <li><strong>Model to Response:</strong> Konversi model User ke ProfileResponse</li>
+                            <li><strong>Success Messages:</strong> Generate success messages untuk operasi</li>
+                            <li><strong>Data Sanitization:</strong> Memastikan data yang dikembalikan aman</li>
+                        </ul>
+                        <p><strong>Security Considerations:</strong></p>
+                        <ul>
+                            <li><strong>User Context:</strong> Menggunakan userID dari JWT token untuk operasi</li>
+                            <li><strong>Data Isolation:</strong> User hanya bisa mengakses data mereka sendiri</li>
+                            <li><strong>Password Security:</strong> Tidak mengembalikan informasi password</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Service layer ini menyediakan business logic yang aman untuk profile management, dengan validasi yang ketat dan isolasi data user yang proper.</p>
+                    </div>
 
                     <h3>🎮 5. Membuat Handler Layer</h3>
                     <p>Buat file <code>handlers/profile_handler.go</code>:</p>
@@ -8420,8 +8775,8 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
     })
 }
 
-// ChangePassword handler untuk mengubah password user
-func (h *ProfileHandler) ChangePassword(c *gin.Context) {
+// ChangeUserPassword handler untuk mengubah password user
+func (h *ProfileHandler) ChangeUserPassword(c *gin.Context) {
     // Ambil user ID dari JWT token
     userIDInterface, exists := c.Get("user_id")
     if !exists {
@@ -8776,28 +9131,7 @@ products (1) ──→ (N) transaction_details</code></pre>
                     <h3>🚀 Persiapan untuk Modul Selanjutnya</h3>
                     <p>Dengan pengetahuan CRUD dan User Management yang solid, Anda sekarang siap untuk mempelajari modul-modul yang lebih advanced:</p>
 
-                    <div style="background: #f3e5f5; border: 1px solid #9c27b0; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
-                        <h4 style="color: #6a1b9a; margin-bottom: 1rem;">🎯 Preview Modul Selanjutnya</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <div style="background: #fce4ec; padding: 1rem; border-radius: 5px; text-align: center;">
-                                <h5 style="color: #c2185b; margin: 0;">🛒 E-Commerce</h5>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Shopping cart, checkout, orders</p>
-                            </div>
-                            <div style="background: #e8eaf6; padding: 1rem; border-radius: 5px; text-align: center;">
-                                <h5 style="color: #3f51b5; margin: 0;">📊 Analytics</h5>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Reports, statistics, insights</p>
-                            </div>
-                            <div style="background: #e0f2f1; padding: 1rem; border-radius: 5px; text-align: center;">
-                                <h5 style="color: #00695c; margin: 0;">🔔 Notifications</h5>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Email, SMS, push notifications</p>
-                            </div>
-                            <div style="background: #fff8e1; padding: 1rem; border-radius: 5px; text-align: center;">
-                                <h5 style="color: #f57f17; margin: 0;">🔍 Search</h5>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Advanced search, filters</p>
-                            </div>
-                        </div>
-                    </div>
-
+                  
                     <h3>🧘 Relaksasi dan Refleksi</h3>
                     <p>Sebelum melanjutkan ke modul selanjutnya, mari kita lakukan relaksasi sejenak:</p>
 
@@ -8817,6 +9151,2460 @@ products (1) ──→ (N) transaction_details</code></pre>
                     <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
                         <h3 style="color: #155724; margin-bottom: 1rem;">🎉 Selamat! Modul CRUD & User Management Selesai!</h3>
                         <p style="color: #155724; margin-bottom: 0;">Dengan penguasaan modul CRUD dan User Management yang solid, Anda sekarang memiliki fondasi yang kuat untuk membangun aplikasi web yang kompleks. Semua pola dan konsep yang dipelajari akan menjadi dasar untuk modul-modul advanced selanjutnya.</p>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter-16',
+                title: 'Bab 16: Public Category API - Customer Endpoint',
+                meta: 'Halaman 16 dari 50 • Dibaca 15 menit',
+                content: `
+                    <h2>🌐 Bab 16: Public Category API - Customer Endpoint</h2>
+                    <p>Selamat! Sekarang kita akan membuat API public untuk kategori yang dapat diakses oleh customer tanpa authentication. Di bab ini, kita akan mengimplementasikan endpoint public untuk mendapatkan daftar kategori dan detail kategori yang dapat digunakan oleh aplikasi frontend customer.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat endpoint public untuk kategori yang dapat diakses tanpa authentication. Endpoint ini akan digunakan oleh customer untuk melihat daftar kategori dan detail kategori. Kita akan menggunakan pattern yang sama dengan endpoint admin, tetapi tanpa middleware authentication.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 10: Modul CRUD Kategori - Role Admin</li>
+                        <li>✅ Bab 11: Modul CRUD Product - Role Admin</li>
+                        <li>✅ Bab 12: Modul User Management - Role Admin</li>
+                        <li>✅ Bab 13: Modul Transaction Management - Role Admin</li>
+                        <li>✅ Bab 14: Modul Profile & Password - User Management</li>
+                        <li>✅ Bab 15: Review Pembelajaran CRUD & User Management</li>
+                        <li>✅ Handler, Service, dan Repository Category sudah ada</li>
+                        <li>✅ Model Category sudah ada dan berfungsi</li>
+                        <li>✅ Tabel categories sudah ada di database</li>
+                    </ul>
+
+                    <h3>🗄️ Database Schema</h3>
+                    <p>Kita akan menggunakan tabel categories yang sudah ada. Berikut adalah schema yang akan kita gunakan:</p>
+
+                    <h4>📊 Tabel Categories (Sudah Ada)</h4>
+                    <pre><code>CREATE TABLE categories (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);</code></pre>
+
+                    <h3>🏗️ Struktur Endpoint yang Akan Dibuat</h3>
+                    <p>Kita akan membuat endpoint public untuk kategori dengan struktur berikut:</p>
+                    <ul>
+                        <li><code>GET /api/v1/public/categories</code> - Ambil semua kategori (dengan pagination)</li>
+                    </ul>
+
+                    <div style="background: #e3f2fd; border: 1px solid #2196f3; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #1565c0; margin-bottom: 1rem;">💡 Mengapa Public Endpoint?</h4>
+                        <ul>
+                            <li><strong>Customer Access:</strong> Customer perlu melihat kategori untuk browsing produk</li>
+                            <li><strong>No Authentication:</strong> Tidak perlu login untuk melihat kategori</li>
+                            <li><strong>Performance:</strong> Endpoint yang cepat tanpa overhead authentication</li>
+                            <li><strong>SEO Friendly:</strong> Dapat di-crawl oleh search engine</li>
+                            <li><strong>Mobile App:</strong> Mudah diakses oleh aplikasi mobile</li>
+                        </ul>
+                        <p style="color: #1565c0; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Public endpoint memungkinkan customer untuk mengakses informasi kategori tanpa perlu login, meningkatkan user experience dan memudahkan integrasi dengan frontend aplikasi.</p>
+                    </div>
+
+                    <h3>🔧 1. Update Main.go untuk Public Routes</h3>
+                    <p>Kita akan menambahkan public routes untuk kategori di file <code>main.go</code>:</p>
+                    
+                    <pre><code>// Public routes (tidak perlu authentication)
+api := r.Group("/api/v1")
+{
+    // Auth routes
+    auth := api.Group("/auth")
+    {
+        auth.POST("/register", authHandler.Register)
+        auth.POST("/login", authHandler.Login)
+    }
+
+    // Public category routes (untuk customer)
+    public := api.Group("/public")
+    {
+        categories := public.Group("/categories")
+        {
+            categories.GET("", categoryHandler.GetAllCategories)
+        }
+    }
+}</code></pre>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                        <h4 style="color: #2c3e50; margin-bottom: 1rem;">💡 Penjelasan Public Routes</h4>
+                        <ul>
+                            <li><strong>Public Group:</strong> Route group <code>/api/v1/public</code> untuk endpoint yang tidak perlu authentication</li>
+                            <li><strong>Categories Group:</strong> Sub-group <code>/categories</code> untuk endpoint kategori</li>
+                            <li><strong>Reuse Handlers:</strong> Menggunakan handler yang sama dengan admin endpoint</li>
+                            <li><strong>No Middleware:</strong> Tidak menggunakan AuthMiddleware atau AdminMiddleware</li>
+                        </ul>
+                        <p><strong>Endpoint yang Tersedia:</strong></p>
+                        <ul>
+                            <li><strong>GET /api/v1/public/categories</strong> - List semua kategori dengan pagination</li>
+                        </ul>
+                        <p><strong>Keamanan:</strong></p>
+                        <ul>
+                            <li><strong>Read-Only Access:</strong> Hanya GET endpoint yang tersedia</li>
+                            <li><strong>No Sensitive Data:</strong> Tidak mengembalikan data sensitif</li>
+                            <li><strong>Public Information:</strong> Kategori adalah informasi publik yang aman</li>
+                        </ul>
+                        <p style="color: #495057; margin-bottom: 0;"><strong>💡 Keuntungan:</strong> Dengan menggunakan handler yang sama, kita memastikan konsistensi response format dan business logic, sambil memberikan akses publik yang aman untuk customer.</p>
+                    </div>
+
+                    <h3>🧪 2. Testing dengan Postman</h3>
+                    <p>Sekarang kita akan test semua endpoint public category menggunakan Postman:</p>
+
+                    <h4>📋 Test Cases untuk Public Category API</h4>
+                    <ol>
+                        <li><strong>GET /api/v1/public/categories</strong> - Ambil semua kategori dengan pagination</li>
+                    </ol>
+
+                    <h4>🔓 Headers yang Diperlukan:</h4>
+                    <p>Endpoint public tidak memerlukan header authentication:</p>
+                    <ul>
+                        <li><code>Content-Type: application/json</code> (opsional untuk GET request)</li>
+                    </ul>
+
+                    <h4>📊 Contoh Response:</h4>
+                    
+                    <h5>Get All Categories (Public):</h5>
+                    <pre><code>{
+    "message": "Categories retrieved successfully",
+    "data": {
+        "categories": [
+            {
+                "id": 1,
+                "name": "Electronics",
+                "slug": "electronics",
+                "created_at": "2024-01-01 10:00:00",
+                "updated_at": "2024-01-01 10:00:00"
+            },
+            {
+                "id": 2,
+                "name": "Clothing",
+                "slug": "clothing",
+                "created_at": "2024-01-01 10:00:00",
+                "updated_at": "2024-01-01 10:00:00"
+            }
+        ],
+        "total": 2,
+        "page": 1,
+        "limit": 10
+    }
+}</code></pre>
+
+
+                    <h3>🎯 Fitur-fitur Public Category API:</h3>
+                    <ul>
+                        <li>✅ <strong>List Categories</strong> - Customer dapat melihat semua kategori dengan pagination</li>
+                        <li>✅ <strong>Pagination Support</strong> - Mendukung pagination untuk performa yang baik</li>
+                        <li>✅ <strong>No Authentication</strong> - Tidak perlu login untuk mengakses</li>
+                        <li>✅ <strong>Consistent Response</strong> - Format response yang konsisten dengan admin API</li>
+                        <li>✅ <strong>Error Handling</strong> - Error handling yang komprehensif</li>
+                        <li>✅ <strong>Public Access</strong> - Dapat diakses oleh siapa saja</li>
+                    </ul>
+
+                    <h3>🔒 Security Features:</h3>
+                    <ul>
+                        <li>✅ <strong>Read-Only Access</strong> - Hanya GET endpoint yang tersedia</li>
+                        <li>✅ <strong>No Sensitive Data</strong> - Tidak mengembalikan data sensitif</li>
+                        <li>✅ <strong>Public Information</strong> - Kategori adalah informasi publik yang aman</li>
+                        <li>✅ <strong>Input Validation</strong> - Validasi input ID dan parameter</li>
+                        <li>✅ <strong>SQL Injection Protection</strong> - Menggunakan prepared statements</li>
+                    </ul>
+
+                    <h3>📊 Database Schema yang Digunakan:</h3>
+                    <ul>
+                        <li>✅ <strong>Categories Table</strong> - Menggunakan tabel categories yang sudah ada</li>
+                        <li>✅ <strong>No Additional Tables</strong> - Tidak memerlukan tabel tambahan</li>
+                        <li>✅ <strong>Existing Relationships</strong> - Menggunakan relasi yang sudah ada</li>
+                        <li>✅ <strong>Optimized Queries</strong> - Query yang sudah dioptimasi</li>
+                    </ul>
+
+                    <h3>🔄 Perbandingan Admin vs Public API:</h3>
+                    
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #856404; margin-bottom: 1rem;">📊 Tabel Perbandingan</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Fitur</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Admin API</th>
+                                    <th style="border: 1px solid #dee2e6; padding: 0.75rem; text-align: left;">Public API</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>Authentication</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Required (JWT)</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Not Required</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>Authorization</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Admin Role</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Public Access</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>GET Categories</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>GET Category Detail</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Not Available</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>POST Category</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Not Available</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>PUT Category</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Not Available</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>DELETE Category</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Available</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">❌ Not Available</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;"><strong>Response Format</strong></td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Consistent</td>
+                                    <td style="border: 1px solid #dee2e6; padding: 0.75rem;">✅ Consistent</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3>🚀 Use Cases untuk Public Category API:</h3>
+                    <ul>
+                        <li>✅ <strong>E-commerce Frontend</strong> - Menampilkan kategori di halaman utama</li>
+                        <li>✅ <strong>Mobile App</strong> - Aplikasi mobile customer</li>
+                        <li>✅ <strong>Search Engine</strong> - Dapat di-crawl oleh search engine</li>
+                        <li>✅ <strong>Third-party Integration</strong> - Integrasi dengan aplikasi lain</li>
+                        <li>✅ <strong>Public Website</strong> - Website publik tanpa login</li>
+                        <li>✅ <strong>API Documentation</strong> - Dokumentasi API yang dapat diakses publik</li>
+                    </ul>
+
+                    <h3>📝 3. Update Postman Collection</h3>
+                    <p>Tambahkan endpoint public category ke Postman collection untuk testing:</p>
+                    
+                    <h4>📋 Postman Collection Structure:</h4>
+                    <pre><code>Tokogo API Collection
+├── Authentication
+│   ├── Register
+│   ├── Login
+│   └── Logout
+├── Admin
+│   ├── Categories (CRUD)
+│   ├── Products (CRUD)
+│   ├── Users (CRUD)
+│   └── Transactions (Read/Update)
+├── Public
+│   └── Categories (Read Only)
+│       └── Get All Categories
+└── User
+    ├── Profile
+    └── Change Password</code></pre>
+
+                    <h4>🔧 Environment Variables:</h4>
+                    <p>Buat environment variables untuk Postman:</p>
+                    <ul>
+                        <li><code>base_url</code> - http://localhost:8080</li>
+                        <li><code>api_version</code> - /api/v1</li>
+                        <li><code>jwt_token</code> - (akan diisi setelah login)</li>
+                    </ul>
+
+                    <h3>✅ Checklist Implementasi</h3>
+                    <p>Pastikan Anda telah menyelesaikan semua langkah berikut:</p>
+                    <ul>
+                        <li>✅ Menambahkan public routes di main.go</li>
+                        <li>✅ Test endpoint GET /api/v1/public/categories</li>
+                        <li>✅ Verifikasi response format konsisten</li>
+                        <li>✅ Test pagination pada list categories</li>
+                        <li>✅ Update Postman collection</li>
+                        <li>✅ Dokumentasi endpoint untuk frontend team</li>
+                    </ul>
+
+                    <h3>🎯 Best Practices untuk Public API:</h3>
+                    <ul>
+                        <li>✅ <strong>Rate Limiting</strong> - Implementasi rate limiting untuk mencegah abuse</li>
+                        <li>✅ <strong>Caching</strong> - Cache response untuk performa yang lebih baik</li>
+                        <li>✅ <strong>API Versioning</strong> - Gunakan versioning untuk backward compatibility</li>
+                        <li>✅ <strong>Documentation</strong> - Dokumentasi yang jelas untuk developer</li>
+                        <li>✅ <strong>Monitoring</strong> - Monitor usage dan performance</li>
+                        <li>✅ <strong>Error Handling</strong> - Error messages yang user-friendly</li>
+                    </ul>
+
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #155724; margin-bottom: 1rem;">🎉 Selamat! Public Category API Selesai!</h3>
+                        <p style="color: #155724; margin-bottom: 0;">Dengan implementasi Public Category API, customer sekarang dapat mengakses informasi kategori tanpa perlu login. API ini menyediakan akses yang aman dan efisien untuk informasi publik, sambil mempertahankan keamanan untuk operasi yang memerlukan authentication.</p>
+                    </div>
+
+                    <h3>🚀 Persiapan untuk Modul Selanjutnya</h3>
+                    <p>Dengan pengetahuan Public API yang solid, Anda sekarang siap untuk mempelajari modul-modul yang lebih advanced:</p>
+                    <ul>
+                        <li>✅ <strong>Public Product API</strong> - API publik untuk produk</li>
+                        <li>✅ <strong>Search & Filter API</strong> - API untuk pencarian dan filter</li>
+                        <li>✅ <strong>File Upload API</strong> - API untuk upload file</li>
+                        <li>✅ <strong>Email Service API</strong> - API untuk mengirim email</li>
+                        <li>✅ <strong>Payment Gateway Integration</strong> - Integrasi payment gateway</li>
+                    </ul>
+
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2e7d32; margin-bottom: 1rem;">🌱 Refleksi Pembelajaran</h4>
+                        <p style="color: #388e3c; margin-bottom: 1rem;">Anda telah berhasil menguasai:</p>
+                        <ul style="color: #388e3c;">
+                            <li>✅ <strong>Public API Design</strong> - Desain API yang aman untuk akses publik</li>
+                            <li>✅ <strong>Route Organization</strong> - Organisasi route yang baik</li>
+                            <li>✅ <strong>Security Considerations</strong> - Pertimbangan keamanan untuk public endpoint</li>
+                            <li>✅ <strong>Consistent Response Format</strong> - Format response yang konsisten</li>
+                            <li>✅ <strong>API Documentation</strong> - Dokumentasi API yang baik</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-top: 1rem; font-style: italic;">"Public API yang baik adalah API yang aman, cepat, dan mudah digunakan. Dengan desain yang tepat, kita dapat memberikan akses yang luas sambil mempertahankan keamanan sistem."</p>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter17',
+                title: 'Bab 17: Public Product API - Akses Data Produk untuk Customer',
+                meta: 'Halaman 17 dari 50 • Dibaca 15 menit',
+                content: `
+                    <h2>🛍️ Bab 17: Public Product API - Akses Data Produk untuk Customer</h2>
+                    <p>Selamat! Sekarang kita akan membuat Public Product API yang memungkinkan customer untuk mengakses data produk tanpa perlu authentication. Di bab ini, kita akan mengimplementasikan endpoint public untuk melihat daftar produk, detail produk, dan produk berdasarkan kategori.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat Public Product API yang aman dengan fitur melihat daftar produk, detail produk, dan produk berdasarkan kategori. API ini tidak memerlukan authentication dan tidak menampilkan informasi sensitif seperti harga beli (purchase_price).</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6-8: Modul Authentication (Register, Login, Logout)</li>
+                        <li>✅ Bab 10: Modul CRUD Kategori - Role Admin</li>
+                        <li>✅ Bab 11: Modul CRUD Product - Role Admin</li>
+                        <li>✅ Tabel products dan categories sudah ada di database</li>
+                        <li>✅ Ada data produk yang sudah dibuat</li>
+                    </ul>
+
+                    <h3>🔒 Keamanan Public API</h3>
+                    <p>Public API memiliki pertimbangan keamanan khusus:</p>
+                    <ul>
+                        <li>✅ <strong>Tidak menampilkan informasi sensitif</strong> - Harga beli (purchase_price) disembunyikan</li>
+                        <li>✅ <strong>Read-only access</strong> - Hanya GET operations yang diizinkan</li>
+                        <li>✅ <strong>No authentication required</strong> - Customer dapat mengakses tanpa login</li>
+                        <li>✅ <strong>Rate limiting ready</strong> - Siap untuk implementasi rate limiting</li>
+                    </ul>
+
+                    <h3>🏗️ Struktur Endpoint yang Akan Dibuat</h3>
+                    <p>Kita akan membuat endpoint-endpoint berikut:</p>
+                    <ul>
+                        <li><code>GET /api/v1/public/products</code> - Mendapatkan daftar semua produk</li>
+                        <li><code>GET /api/v1/public/products/{id}</code> - Mendapatkan detail produk berdasarkan ID</li>
+                        <li><code>GET /api/v1/public/products/categories/{category_id}</code> - Mendapatkan produk berdasarkan kategori</li>
+                    </ul>
+
+                    <h3>📝 1. Menambahkan Public Routes ke main.go</h3>
+                    <p>Pertama, kita tambahkan public routes untuk produk di file <code>main.go</code>:</p>
+                    
+                    <pre><code>// Public routes (untuk customer)
+public := api.Group("/public")
+{
+    categories := public.Group("/categories")
+    {
+        categories.GET("", categoryHandler.GetAllCategories)
+    }
+    
+    products := public.Group("/products")
+    {
+        products.GET("", productHandler.GetAllProductsPublic)
+        products.GET("/:id", productHandler.GetProductByIDPublic)
+        products.GET("/categories/:category_id", productHandler.GetProductsByCategoryPublic)
+    }
+}</code></pre>
+
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin: 2rem 0;">
+                        <strong>💡 Penjelasan:</strong> Public routes ditempatkan di luar middleware authentication, sehingga customer dapat mengakses tanpa perlu login.
+                    </div>
+
+                    <h3>📝 2. Membuat Public Product Response</h3>
+                    <p>Kita buat response struct khusus untuk public API di file <code>responses/product_response.go</code>:</p>
+                    
+                    <pre><code>// PublicProductResponse untuk response public (tanpa purchase_price)
+type PublicProductResponse struct {
+    ID           uint    \`json:"id"\`
+    Name         string  \`json:"name"\`
+    Description  string  \`json:"description"\`
+    SellingPrice float64 \`json:"selling_price"\`
+    Stock        int     \`json:"stock"\`
+    CategoryID   uint    \`json:"category_id"\`
+    CategoryName string  \`json:"category_name"\`
+    ImagePath    string  \`json:"image_url"\`
+    CreatedAt    string  \`json:"created_at"\`
+    UpdatedAt    string  \`json:"updated_at"\`
+}
+
+type PublicProductListResponse struct {
+    Products []PublicProductResponse \`json:"products"\`
+    Total    int64                   \`json:"total"\`
+    Page     int                     \`json:"page"\`
+    Limit    int                     \`json:"limit"\`
+}
+
+func ConvertProductToPublicResponse(product models.Product) PublicProductResponse {
+    return PublicProductResponse{
+        ID:           product.ID,
+        Name:         product.Name,
+        Description:  product.Description,
+        SellingPrice: product.SellingPrice,
+        Stock:        product.Stock,
+        CategoryID:   product.CategoryID,
+        CategoryName: product.Category.Name,
+        ImagePath:    product.ImageURL,
+        CreatedAt:    product.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt:    product.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }
+}
+
+func ConvertProductsToPublicResponse(products []models.Product) []PublicProductResponse {
+    var responses []PublicProductResponse
+    for _, product := range products {
+        responses = append(responses, ConvertProductToPublicResponse(product))
+    }
+    return responses
+}</code></pre>
+
+                    <div style="background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 1rem; margin: 2rem 0;">
+                        <strong>🔍 Perbedaan dengan Admin Response:</strong> PublicProductResponse tidak menyertakan field <code>purchase_price</code> untuk menjaga kerahasiaan harga beli.
+                    </div>
+
+                    <h3>📝 3. Menambahkan Public Handler Methods</h3>
+                    <p>Kita tambahkan handler methods untuk public API di file <code>handlers/product_handler.go</code>:</p>
+                    
+                    <pre><code>// GetAllProductsPublic godoc
+// @Summary Get all products (Public)
+// @Description Get all products with pagination (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.PublicProductListResponse
+// @Router /api/v1/public/products [get]
+func (h *ProductHandler) GetAllProductsPublic(c *gin.Context) {
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+    products, err := h.productService.GetAllProductsPublic(page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, products)
+}
+
+// GetProductByIDPublic godoc
+// @Summary Get product by ID (Public)
+// @Description Get a specific product by ID (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} responses.PublicProductResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/public/products/{id} [get]
+func (h *ProductHandler) GetProductByIDPublic(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    product, err := h.productService.GetProductByIDPublic(uint(id))
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, product)
+}
+
+// GetProductsByCategoryPublic godoc
+// @Summary Get products by category (Public)
+// @Description Get products by category ID with pagination (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param category_id path int true "Category ID"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.PublicProductListResponse
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/public/products/categories/{category_id} [get]
+func (h *ProductHandler) GetProductsByCategoryPublic(c *gin.Context) {
+    categoryID, err := strconv.ParseUint(c.Param("category_id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+        return
+    }
+
+    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+    limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+    products, err := h.productService.GetProductsByCategoryPublic(uint(categoryID), page, limit)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, products)
+}</code></pre>
+
+                    <h3>📝 4. Menambahkan Public Service Methods</h3>
+                    <p>Kita tambahkan service methods untuk public API di file <code>services/product_service.go</code>:</p>
+                    
+                    <pre><code>// Public methods (tanpa purchase_price)
+func (s *ProductService) GetAllProductsPublic(page, limit int) (*responses.PublicProductListResponse, error) {
+    if page < 1 {
+        page = 1
+    }
+    if limit < 1 {
+        limit = 10
+    }
+
+    products, total, err := s.productRepo.GetAll(page, limit)
+    if err != nil {
+        return nil, err
+    }
+
+    productResponses := responses.ConvertProductsToPublicResponse(products)
+
+    return &responses.PublicProductListResponse{
+        Products: productResponses,
+        Total:    total,
+        Page:     page,
+        Limit:    limit,
+    }, nil
+}
+
+func (s *ProductService) GetProductByIDPublic(id uint) (*responses.PublicProductResponse, error) {
+    product, err := s.productRepo.GetByID(id)
+    if err != nil {
+        return nil, err
+    }
+
+    response := responses.ConvertProductToPublicResponse(*product)
+    return &response, nil
+}
+
+func (s *ProductService) GetProductsByCategoryPublic(categoryID uint, page, limit int) (*responses.PublicProductListResponse, error) {
+    if page < 1 {
+        page = 1
+    }
+    if limit < 1 {
+        limit = 10
+    }
+
+    products, total, err := s.productRepo.GetByCategoryID(categoryID, page, limit)
+    if err != nil {
+        return nil, err
+    }
+
+    productResponses := responses.ConvertProductsToPublicResponse(products)
+
+    return &responses.PublicProductListResponse{
+        Products: productResponses,
+        Total:    total,
+        Page:     page,
+        Limit:    limit,
+    }, nil
+}</code></pre>
+
+                    <h3>🧪 Testing Public Product API</h3>
+                    <p>Sekarang kita test API yang sudah dibuat menggunakan Postman atau curl:</p>
+
+                    <h4>1. Test Get All Products (Public)</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/public/products
+GET http://localhost:8080/api/v1/public/products?page=1&limit=5</code></pre>
+
+                    <h4>2. Test Get Product by ID (Public)</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/public/products/1</code></pre>
+
+                    <h4>3. Test Get Products by Category (Public)</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/public/products/categories/1
+GET http://localhost:8080/api/v1/public/products/categories/1?page=1&limit=3</code></pre>
+
+                    <h4>4. Expected Response Format</h4>
+                    <pre><code>{
+    "products": [
+        {
+            "id": 1,
+            "name": "Laptop Gaming",
+            "description": "Laptop gaming dengan performa tinggi",
+            "selling_price": 15000000,
+            "stock": 10,
+            "category_id": 1,
+            "category_name": "Electronics",
+            "image_url": "/uploads/products/laptop.jpg",
+            "created_at": "2024-01-15 10:30:00",
+            "updated_at": "2024-01-15 10:30:00"
+        }
+    ],
+    "total": 1,
+    "page": 1,
+    "limit": 10
+}</code></pre>
+
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #155724; margin-bottom: 1rem;">🎉 Selamat! Public Product API Selesai!</h3>
+                        <p style="color: #155724; margin-bottom: 0;">Dengan Public Product API yang lengkap, customer sekarang dapat mengakses data produk tanpa perlu authentication, sambil tetap menjaga keamanan informasi sensitif!</p>
+                    </div>
+
+                    <h3>🔍 Perbandingan Admin vs Public API</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Aspek</th>
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Admin API</th>
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Public API</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><strong>Authentication</strong></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Required (JWT Token)</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Not Required</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><strong>Purchase Price</strong></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">✅ Included</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">❌ Hidden</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><strong>Operations</strong></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">CRUD (Create, Read, Update, Delete)</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Read Only</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><strong>Access Level</strong></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Admin Only</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Public</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>🚀 Langkah Selanjutnya</h3>
+                    <p>Dengan Public Product API yang sudah selesai, Anda dapat:</p>
+                    <ul>
+                        <li>✅ <strong>Integrate dengan Frontend</strong> - Gunakan API ini untuk menampilkan produk di website customer</li>
+                        <li>✅ <strong>Mobile App Integration</strong> - API ini siap untuk diintegrasikan dengan aplikasi mobile</li>
+                        <li>✅ <strong>Third-party Integration</strong> - API ini dapat digunakan oleh partner atau affiliate</li>
+                        <li>✅ <strong>Add Search & Filter</strong> - Tambahkan fitur pencarian dan filter produk</li>
+                        <li>✅ <strong>Implement Caching</strong> - Tambahkan caching untuk meningkatkan performa</li>
+                    </ul>
+
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2e7d32; margin-bottom: 1rem;">🌱 Refleksi Pembelajaran</h4>
+                        <p style="color: #388e3c; margin-bottom: 1rem;">Anda telah berhasil menguasai:</p>
+                        <ul style="color: #388e3c;">
+                            <li>✅ <strong>Public API Design</strong> - Desain API yang aman untuk akses publik</li>
+                            <li>✅ <strong>Security Best Practices</strong> - Menyembunyikan informasi sensitif</li>
+                            <li>✅ <strong>Response Structure</strong> - Struktur response yang berbeda untuk admin dan public</li>
+                            <li>✅ <strong>Route Organization</strong> - Organisasi route yang baik</li>
+                            <li>✅ <strong>API Documentation</strong> - Dokumentasi API yang lengkap</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-top: 1rem; font-style: italic;">"Public API yang baik adalah API yang memberikan akses yang mudah sambil menjaga keamanan data sensitif. Dengan desain yang tepat, kita dapat melayani customer dengan baik tanpa mengorbankan keamanan bisnis."</p>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter18',
+                title: 'Bab 18: Cart Management API - CRUD Keranjang Belanja untuk Customer',
+                meta: 'Halaman 18 dari 50 • Dibaca 20 menit',
+                content: `
+                    <h2>🛒 Bab 18: Cart Management API - CRUD Keranjang Belanja untuk Customer</h2>
+                    <p>Selamat! Sekarang kita akan membuat Cart Management API yang memungkinkan customer untuk mengelola keranjang belanja mereka. Di bab ini, kita akan mengimplementasikan sistem keranjang belanja lengkap dengan fitur add to cart, view cart, update quantity, remove item, dan clear cart.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat Cart Management API yang lengkap dengan fitur CRUD (Create, Read, Update, Delete) untuk keranjang belanja. Customer dapat menambah produk ke keranjang, melihat isi keranjang, mengupdate jumlah produk, menghapus item, dan mengosongkan keranjang. Semua operasi memerlukan authentication.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6-8: Modul Authentication (Register, Login, Logout)</li>
+                        <li>✅ Bab 11: Modul CRUD Product - Role Admin</li>
+                        <li>✅ Bab 17: Public Product API</li>
+                        <li>✅ Tabel users dan products sudah ada di database</li>
+                        <li>✅ Ada data produk yang sudah dibuat</li>
+                        <li>✅ User sudah bisa login dan mendapat JWT token</li>
+                    </ul>
+
+                    <h3>🗄️ Database Schema</h3>
+                    <p>Sebelum memulai, kita perlu membuat tabel untuk cart. Berikut adalah schema database yang akan kita gunakan:</p>
+
+                    <h4>📊 Tabel Carts</h4>
+                    <pre><code>CREATE TABLE carts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_product (user_id, product_id)
+);</code></pre>
+
+                    <div style="background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 1rem; margin: 2rem 0;">
+                        <strong>🔍 Catatan Penting:</strong> Unique constraint pada (user_id, product_id) memastikan setiap user hanya bisa memiliki satu record per produk di keranjang. Jika user menambah produk yang sama, quantity akan diupdate.
+                    </div>
+
+                    <h3>🏗️ Struktur File yang Akan Dibuat</h3>
+                    <p>Kita akan membuat file-file berikut untuk modul Cart Management:</p>
+                    <ul>
+                        <li><code>models/cart.go</code> - Model Cart</li>
+                        <li><code>requests/cart_request.go</code> - Request structs untuk cart operations</li>
+                        <li><code>responses/cart_response.go</code> - Response structs untuk cart data</li>
+                        <li><code>repositories/cart_repository.go</code> - Repository layer untuk cart operations</li>
+                        <li><code>services/cart_service.go</code> - Service layer untuk cart business logic</li>
+                        <li><code>handlers/cart_handler.go</code> - Handler layer untuk cart HTTP endpoints</li>
+                    </ul>
+
+                    <h3>📝 1. Membuat Model Cart</h3>
+                    <p>Pertama, kita buat model Cart di file <code>models/cart.go</code>:</p>
+                    
+                    <pre><code>package models
+
+import "time"
+
+type Cart struct {
+    ID        uint      \`json:"id" gorm:"primaryKey"\`
+    UserID    uint      \`json:"user_id" gorm:"not null"\`
+    User      User      \`json:"user" gorm:"foreignKey:UserID"\`
+    ProductID uint      \`json:"product_id" gorm:"not null"\`
+    Product   Product   \`json:"product" gorm:"foreignKey:ProductID"\`
+    Quantity  int       \`json:"quantity" gorm:"not null;default:1"\`
+    CreatedAt time.Time \`json:"created_at"\`
+    UpdatedAt time.Time \`json:"updated_at"\`
+}
+
+func (Cart) TableName() string {
+    return "carts"
+}</code></pre>
+
+                    <div style="background: #e8f4fd; border-left: 4px solid #2196f3; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #1976d2; margin-bottom: 1rem;">🔍 Penjelasan Model Cart</h4>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>Struktur Field:</strong></p>
+                        <ul style="color: #1565c0; margin-bottom: 1rem;">
+                            <li><strong>ID</strong> - Primary key yang auto-increment untuk identifikasi unik setiap item cart</li>
+                            <li><strong>UserID</strong> - Foreign key ke tabel users, menunjukkan siapa pemilik cart item ini</li>
+                            <li><strong>User</strong> - Relasi GORM ke model User untuk mendapatkan data user lengkap</li>
+                            <li><strong>ProductID</strong> - Foreign key ke tabel products, menunjukkan produk apa yang ada di cart</li>
+                            <li><strong>Product</strong> - Relasi GORM ke model Product untuk mendapatkan detail produk</li>
+                            <li><strong>Quantity</strong> - Jumlah produk yang ditambahkan ke cart (default: 1)</li>
+                            <li><strong>CreatedAt/UpdatedAt</strong> - Timestamp untuk tracking kapan item dibuat dan diupdate</li>
+                        </ul>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>GORM Tags:</strong></p>
+                        <ul style="color: #1565c0;">
+                            <li><code>gorm:"primaryKey"</code> - Menandai field sebagai primary key</li>
+                            <li><code>gorm:"not null"</code> - Field wajib diisi, tidak boleh NULL</li>
+                            <li><code>gorm:"default:1"</code> - Nilai default jika tidak diisi</li>
+                            <li><code>gorm:"foreignKey:UserID"</code> - Menentukan foreign key untuk relasi</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 2. Membuat Request Structs</h3>
+                    <p>Kita buat request structs untuk cart operations di file <code>requests/cart_request.go</code>:</p>
+                    
+                    <pre><code>package requests
+
+import "errors"
+
+type AddToCartRequest struct {
+    ProductID uint \`json:"product_id" binding:"required"\`
+    Quantity  int  \`json:"quantity" binding:"required,min=1"\`
+}
+
+func (r *AddToCartRequest) Validate() error {
+    if r.ProductID == 0 {
+        return errors.New("product_id is required")
+    }
+    if r.Quantity <= 0 {
+        return errors.New("quantity must be greater than 0")
+    }
+    return nil
+}
+
+type UpdateCartItemRequest struct {
+    Quantity int \`json:"quantity" binding:"required,min=1"\`
+}
+
+func (r *UpdateCartItemRequest) Validate() error {
+    if r.Quantity <= 0 {
+        return errors.New("quantity must be greater than 0")
+    }
+    return nil
+}
+
+type RemoveFromCartRequest struct {
+    ProductID uint \`json:"product_id" binding:"required"\`
+}
+
+func (r *RemoveFromCartRequest) Validate() error {
+    if r.ProductID == 0 {
+        return errors.New("product_id is required")
+    }
+    return nil
+}</code></pre>
+
+                    <div style="background: #f3e5f5; border-left: 4px solid #9c27b0; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #7b1fa2; margin-bottom: 1rem;">🔍 Penjelasan Request Structs</h4>
+                        <p style="color: #6a1b9a; margin-bottom: 1rem;"><strong>AddToCartRequest:</strong></p>
+                        <ul style="color: #6a1b9a; margin-bottom: 1rem;">
+                            <li><strong>ProductID</strong> - ID produk yang akan ditambahkan ke cart (wajib)</li>
+                            <li><strong>Quantity</strong> - Jumlah produk yang ditambahkan (wajib, minimal 1)</li>
+                            <li><code>binding:"required"</code> - Validasi Gin untuk memastikan field wajib diisi</li>
+                            <li><code>binding:"min=1"</code> - Validasi untuk memastikan quantity minimal 1</li>
+                        </ul>
+                        <p style="color: #6a1b9a; margin-bottom: 1rem;"><strong>UpdateCartItemRequest:</strong></p>
+                        <ul style="color: #6a1b9a; margin-bottom: 1rem;">
+                            <li><strong>Quantity</strong> - Jumlah baru untuk item di cart</li>
+                            <li>Hanya quantity yang bisa diupdate, product_id tidak bisa diubah</li>
+                        </ul>
+                        <p style="color: #6a1b9a; margin-bottom: 1rem;"><strong>Validation Methods:</strong></p>
+                        <ul style="color: #6a1b9a;">
+                            <li>Custom validation method untuk validasi bisnis logic</li>
+                            <li>Memastikan ProductID tidak 0 (invalid)</li>
+                            <li>Memastikan Quantity lebih dari 0</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 3. Membuat Response Structs</h3>
+                    <p>Kita buat response structs untuk cart data di file <code>responses/cart_response.go</code>:</p>
+                    
+                    <pre><code>package responses
+
+import "tokogo/models"
+
+type CartItemResponse struct {
+    ID           uint    \`json:"id"\`
+    UserID       uint    \`json:"user_id"\`
+    ProductID    uint    \`json:"product_id"\`
+    ProductName  string  \`json:"product_name"\`
+    ProductPrice float64 \`json:"product_price"\`
+    ProductImage string  \`json:"product_image"\`
+    Quantity     int     \`json:"quantity"\`
+    Subtotal     float64 \`json:"subtotal"\`
+    CreatedAt    string  \`json:"created_at"\`
+    UpdatedAt    string  \`json:"updated_at"\`
+}
+
+type CartResponse struct {
+    Items      []CartItemResponse \`json:"items"\`
+    TotalItems int                \`json:"total_items"\`
+    TotalPrice float64            \`json:"total_price"\`
+}
+
+func ConvertCartToResponse(cart models.Cart) CartItemResponse {
+    subtotal := float64(cart.Quantity) * cart.Product.SellingPrice
+    
+    return CartItemResponse{
+        ID:           cart.ID,
+        UserID:       cart.UserID,
+        ProductID:    cart.ProductID,
+        ProductName:  cart.Product.Name,
+        ProductPrice: cart.Product.SellingPrice,
+        ProductImage: cart.Product.ImageURL,
+        Quantity:     cart.Quantity,
+        Subtotal:     subtotal,
+        CreatedAt:    cart.CreatedAt.Format("2006-01-02 15:04:05"),
+        UpdatedAt:    cart.UpdatedAt.Format("2006-01-02 15:04:05"),
+    }
+}
+
+func ConvertCartsToResponse(carts []models.Cart) []CartItemResponse {
+    var responses []CartItemResponse
+    var totalPrice float64
+    
+    for _, cart := range carts {
+        response := ConvertCartToResponse(cart)
+        responses = append(responses, response)
+        totalPrice += response.Subtotal
+    }
+    
+    return responses
+}
+
+func CreateCartResponse(carts []models.Cart) CartResponse {
+    items := ConvertCartsToResponse(carts)
+    
+    var totalItems int
+    var totalPrice float64
+    
+    for _, item := range items {
+        totalItems += item.Quantity
+        totalPrice += item.Subtotal
+    }
+    
+    return CartResponse{
+        Items:      items,
+        TotalItems: totalItems,
+        TotalPrice: totalPrice,
+    }
+}</code></pre>
+
+                    <div style="background: #e8f5e8; border-left: 4px solid #4caf50; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #388e3c; margin-bottom: 1rem;">🔍 Penjelasan Response Structs</h4>
+                        <p style="color: #2e7d32; margin-bottom: 1rem;"><strong>CartItemResponse:</strong></p>
+                        <ul style="color: #2e7d32; margin-bottom: 1rem;">
+                            <li><strong>ID, UserID, ProductID</strong> - Data identifikasi</li>
+                            <li><strong>ProductName, ProductPrice, ProductImage</strong> - Detail produk yang user-friendly</li>
+                            <li><strong>Quantity</strong> - Jumlah item di cart</li>
+                            <li><strong>Subtotal</strong> - Harga total untuk item ini (price × quantity)</li>
+                            <li><strong>CreatedAt/UpdatedAt</strong> - Timestamp dalam format string yang mudah dibaca</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-bottom: 1rem;"><strong>CartResponse:</strong></p>
+                        <ul style="color: #2e7d32; margin-bottom: 1rem;">
+                            <li><strong>Items</strong> - Array semua item di cart</li>
+                            <li><strong>TotalItems</strong> - Total jumlah item (sum dari semua quantity)</li>
+                            <li><strong>TotalPrice</strong> - Total harga semua item di cart</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-bottom: 1rem;"><strong>Conversion Functions:</strong></p>
+                        <ul style="color: #2e7d32;">
+                            <li><strong>ConvertCartToResponse</strong> - Mengkonversi model Cart ke response format</li>
+                            <li><strong>ConvertCartsToResponse</strong> - Mengkonversi array Cart ke array response</li>
+                            <li><strong>CreateCartResponse</strong> - Membuat response lengkap dengan totals</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 4. Membuat Repository Layer</h3>
+                    <p>Kita buat repository layer untuk cart operations di file <code>repositories/cart_repository.go</code>:</p>
+                    
+                    <pre><code>package repositories
+
+import (
+    "tokogo/models"
+
+    "gorm.io/gorm"
+)
+
+type CartRepository struct {
+    db *gorm.DB
+}
+
+func NewCartRepository(db *gorm.DB) *CartRepository {
+    return &CartRepository{
+        db: db,
+    }
+}
+
+func (r *CartRepository) Create(cart *models.Cart) error {
+    return r.db.Create(cart).Error
+}
+
+func (r *CartRepository) GetByUserID(userID uint) ([]models.Cart, error) {
+    var carts []models.Cart
+    err := r.db.Preload("Product").Preload("User").Where("user_id = ?", userID).Find(&carts).Error
+    return carts, err
+}
+
+func (r *CartRepository) GetByUserIDAndProductID(userID, productID uint) (*models.Cart, error) {
+    var cart models.Cart
+    err := r.db.Preload("Product").Preload("User").Where("user_id = ? AND product_id = ?", userID, productID).First(&cart).Error
+    if err != nil {
+        return nil, err
+    }
+    return &cart, nil
+}
+
+func (r *CartRepository) Update(cart *models.Cart) error {
+    return r.db.Save(cart).Error
+}
+
+func (r *CartRepository) Delete(cartID uint) error {
+    return r.db.Delete(&models.Cart{}, cartID).Error
+}
+
+func (r *CartRepository) DeleteByUserIDAndProductID(userID, productID uint) error {
+    return r.db.Where("user_id = ? AND product_id = ?", userID, productID).Delete(&models.Cart{}).Error
+}
+
+func (r *CartRepository) ClearCart(userID uint) error {
+    return r.db.Where("user_id = ?", userID).Delete(&models.Cart{}).Error
+}
+
+func (r *CartRepository) GetCartItemCount(userID uint) (int64, error) {
+    var count int64
+    err := r.db.Model(&models.Cart{}).Where("user_id = ?", userID).Count(&count).Error
+    return count, err
+}</code></pre>
+
+                    <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #f57c00; margin-bottom: 1rem;">🔍 Penjelasan Repository Layer</h4>
+                        <p style="color: #ef6c00; margin-bottom: 1rem;"><strong>Constructor:</strong></p>
+                        <ul style="color: #ef6c00; margin-bottom: 1rem;">
+                            <li><strong>CartRepository</strong> - Struct yang menyimpan koneksi database</li>
+                            <li><strong>NewCartRepository</strong> - Constructor yang menerima koneksi GORM</li>
+                            <li>Dependency injection pattern untuk testability</li>
+                        </ul>
+                        <p style="color: #ef6c00; margin-bottom: 1rem;"><strong>CRUD Operations:</strong></p>
+                        <ul style="color: #ef6c00; margin-bottom: 1rem;">
+                            <li><strong>Create</strong> - Menyimpan cart item baru ke database</li>
+                            <li><strong>GetByUserID</strong> - Mengambil semua cart item user dengan Preload relasi</li>
+                            <li><strong>GetByUserIDAndProductID</strong> - Cek apakah item sudah ada di cart</li>
+                            <li><strong>Update</strong> - Update cart item (Save akan auto-update timestamp)</li>
+                            <li><strong>Delete</strong> - Hapus cart item berdasarkan ID atau user+product</li>
+                            <li><strong>ClearCart</strong> - Hapus semua item cart user</li>
+                            <li><strong>GetCartItemCount</strong> - Hitung jumlah item di cart</li>
+                        </ul>
+                        <p style="color: #ef6c00; margin-bottom: 1rem;"><strong>GORM Features:</strong></p>
+                        <ul style="color: #ef6c00;">
+                            <li><strong>Preload("Product")</strong> - Eager loading untuk relasi Product</li>
+                            <li><strong>Where()</strong> - Filter data berdasarkan kondisi</li>
+                            <li><strong>Find()</strong> - Mengambil multiple records</li>
+                            <li><strong>First()</strong> - Mengambil record pertama yang match</li>
+                            <li><strong>Count()</strong> - Menghitung jumlah records</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 5. Membuat Service Layer</h3>
+                    <p>Kita buat service layer untuk cart business logic di file <code>services/cart_service.go</code>:</p>
+                    
+                    <pre><code>package services
+
+import (
+    "errors"
+    "tokogo/config"
+    "tokogo/models"
+    "tokogo/repositories"
+    "tokogo/requests"
+    "tokogo/responses"
+)
+
+type CartService struct {
+    cartRepo     *repositories.CartRepository
+    productRepo  *repositories.ProductRepository
+}
+
+func NewCartService() *CartService {
+    return &CartService{
+        cartRepo:    repositories.NewCartRepository(),
+        productRepo: repositories.NewProductRepository(config.DB),
+    }
+}
+
+func (s *CartService) AddToCart(userID uint, req requests.AddToCartRequest) (*responses.CartItemResponse, error) {
+    // Check if product exists
+    product, err := s.productRepo.GetByID(req.ProductID)
+    if err != nil {
+        return nil, errors.New("product not found")
+    }
+
+    // Check if product is in stock
+    if product.Stock < req.Quantity {
+        return nil, errors.New("insufficient stock")
+    }
+
+    // Check if item already exists in cart
+    existingCart, err := s.cartRepo.GetByUserIDAndProductID(userID, req.ProductID)
+    if err == nil {
+        // Item exists, update quantity
+        existingCart.Quantity += req.Quantity
+        
+        // Check stock again after adding
+        if product.Stock < existingCart.Quantity {
+            return nil, errors.New("insufficient stock")
+        }
+        
+        if err := s.cartRepo.Update(existingCart); err != nil {
+            return nil, errors.New("failed to update cart")
+        }
+        
+        response := responses.ConvertCartToResponse(*existingCart)
+        return &response, nil
+    }
+
+    // Create new cart item
+    cart := &models.Cart{
+        UserID:    userID,
+        ProductID: req.ProductID,
+        Quantity:  req.Quantity,
+    }
+
+    if err := s.cartRepo.Create(cart); err != nil {
+        return nil, errors.New("failed to add to cart")
+    }
+
+    // Get the created cart with product details
+    createdCart, err := s.cartRepo.GetByUserIDAndProductID(userID, req.ProductID)
+    if err != nil {
+        return nil, errors.New("failed to retrieve cart item")
+    }
+
+    response := responses.ConvertCartToResponse(*createdCart)
+    return &response, nil
+}
+
+func (s *CartService) GetCart(userID uint) (*responses.CartResponse, error) {
+    carts, err := s.cartRepo.GetByUserID(userID)
+    if err != nil {
+        return nil, errors.New("failed to get cart")
+    }
+
+    response := responses.CreateCartResponse(carts)
+    return &response, nil
+}
+
+func (s *CartService) UpdateCartItem(userID uint, productID uint, req requests.UpdateCartItemRequest) (*responses.CartItemResponse, error) {
+    // Check if product exists
+    product, err := s.productRepo.GetByID(productID)
+    if err != nil {
+        return nil, errors.New("product not found")
+    }
+
+    // Check if product is in stock
+    if product.Stock < req.Quantity {
+        return nil, errors.New("insufficient stock")
+    }
+
+    // Get existing cart item
+    cart, err := s.cartRepo.GetByUserIDAndProductID(userID, productID)
+    if err != nil {
+        return nil, errors.New("cart item not found")
+    }
+
+    // Update quantity
+    cart.Quantity = req.Quantity
+
+    if err := s.cartRepo.Update(cart); err != nil {
+        return nil, errors.New("failed to update cart")
+    }
+
+    response := responses.ConvertCartToResponse(*cart)
+    return &response, nil
+}
+
+func (s *CartService) RemoveFromCart(userID uint, productID uint) error {
+    // Check if cart item exists
+    _, err := s.cartRepo.GetByUserIDAndProductID(userID, productID)
+    if err != nil {
+        return errors.New("cart item not found")
+    }
+
+    if err := s.cartRepo.DeleteByUserIDAndProductID(userID, productID); err != nil {
+        return errors.New("failed to remove from cart")
+    }
+
+    return nil
+}
+
+func (s *CartService) ClearCart(userID uint) error {
+    if err := s.cartRepo.ClearCart(userID); err != nil {
+        return errors.New("failed to clear cart")
+    }
+
+    return nil
+}
+
+func (s *CartService) GetCartItemCount(userID uint) (int64, error) {
+    count, err := s.cartRepo.GetCartItemCount(userID)
+    if err != nil {
+        return 0, errors.New("failed to get cart count")
+    }
+
+    return count, nil
+}</code></pre>
+
+                    <div style="background: #fce4ec; border-left: 4px solid #e91e63; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #c2185b; margin-bottom: 1rem;">🔍 Penjelasan Service Layer</h4>
+                        <p style="color: #ad1457; margin-bottom: 1rem;"><strong>Constructor:</strong></p>
+                        <ul style="color: #ad1457; margin-bottom: 1rem;">
+                            <li><strong>CartService</strong> - Business logic layer</li>
+                            <li><strong>cartRepo</strong> - Repository untuk cart operations</li>
+                            <li><strong>productRepo</strong> - Repository untuk product operations (validasi stock)</li>
+                            <li>Dependency injection untuk testability</li>
+                        </ul>
+                        <p style="color: #ad1457; margin-bottom: 1rem;"><strong>AddToCart Business Logic:</strong></p>
+                        <ol style="color: #ad1457; margin-bottom: 1rem;">
+                            <li><strong>Validasi Produk</strong> - Cek apakah produk ada di database</li>
+                            <li><strong>Validasi Stock</strong> - Cek apakah stok mencukupi</li>
+                            <li><strong>Cek Item Existing</strong> - Jika item sudah ada, update quantity</li>
+                            <li><strong>Validasi Stock Lagi</strong> - Cek stock setelah menambah quantity</li>
+                            <li><strong>Create/Update</strong> - Buat item baru atau update yang existing</li>
+                            <li><strong>Return Response</strong> - Konversi ke response format</li>
+                        </ol>
+                        <p style="color: #ad1457; margin-bottom: 1rem;"><strong>Business Rules:</strong></p>
+                        <ul style="color: #ad1457;">
+                            <li>Stock validation sebelum dan sesudah operasi</li>
+                            <li>Automatic quantity update untuk existing items</li>
+                            <li>Error handling yang konsisten</li>
+                            <li>Data conversion ke response format</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 6. Membuat Handler Layer</h3>
+                    <p>Kita buat handler layer untuk cart HTTP endpoints di file <code>handlers/cart_handler.go</code>:</p>
+                    
+                    <pre><code>package handlers
+
+import (
+    "net/http"
+    "strconv"
+    "tokogo/requests"
+    "tokogo/responses"
+    "tokogo/services"
+
+    "github.com/gin-gonic/gin"
+)
+
+type CartHandler struct {
+    cartService *services.CartService
+}
+
+func NewCartHandler() *CartHandler {
+    return &CartHandler{
+        cartService: services.NewCartService(),
+    }
+}
+
+// AddToCart godoc
+// @Summary Add item to cart
+// @Description Add a product to user's cart
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param cart body requests.AddToCartRequest true "Cart item data"
+// @Success 201 {object} responses.CartItemResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/cart [post]
+func (h *CartHandler) AddToCart(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    var req requests.AddToCartRequest
+
+    // Bind and validate request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validate using method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Call service to add to cart
+    response, err := h.cartService.AddToCart(userID, req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "add_to_cart_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusCreated, responses.SuccessResponse{
+        Message: "Item added to cart successfully",
+        Data:    response,
+    })
+}
+
+// GetCart godoc
+// @Summary Get user's cart
+// @Description Get all items in user's cart
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} responses.CartResponse
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/cart [get]
+func (h *CartHandler) GetCart(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Call service to get cart
+    response, err := h.cartService.GetCart(userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+            Error:   "get_cart_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Cart retrieved successfully",
+        Data:    response,
+    })
+}
+
+// UpdateCartItem godoc
+// @Summary Update cart item quantity
+// @Description Update the quantity of a specific item in cart
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Param cart body requests.UpdateCartItemRequest true "Updated quantity"
+// @Success 200 {object} responses.CartItemResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/cart/{product_id} [put]
+func (h *CartHandler) UpdateCartItem(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Get product ID from URL parameter
+    productID, err := strconv.ParseUint(c.Param("product_id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: "Invalid product ID",
+        })
+        return
+    }
+
+    var req requests.UpdateCartItemRequest
+
+    // Bind and validate request
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Validate using method Validate()
+    if err := req.Validate(); err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    // Call service to update cart item
+    response, err := h.cartService.UpdateCartItem(userID, uint(productID), req)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "update_cart_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Cart item updated successfully",
+        Data:    response,
+    })
+}
+
+// RemoveFromCart godoc
+// @Summary Remove item from cart
+// @Description Remove a specific item from user's cart
+// @Tags Cart
+// @Produce json
+// @Param product_id path int true "Product ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/cart/{product_id} [delete]
+func (h *CartHandler) RemoveFromCart(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Get product ID from URL parameter
+    productID, err := strconv.ParseUint(c.Param("product_id"), 10, 32)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "validation_error",
+            Message: "Invalid product ID",
+        })
+        return
+    }
+
+    // Call service to remove from cart
+    err = h.cartService.RemoveFromCart(userID, uint(productID))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+            Error:   "remove_from_cart_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Item removed from cart successfully",
+        Data:    nil,
+    })
+}
+
+// ClearCart godoc
+// @Summary Clear user's cart
+// @Description Remove all items from user's cart
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/cart/clear [delete]
+func (h *CartHandler) ClearCart(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Call service to clear cart
+    err := h.cartService.ClearCart(userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+            Error:   "clear_cart_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Cart cleared successfully",
+        Data:    nil,
+    })
+}
+
+// GetCartItemCount godoc
+// @Summary Get cart item count
+// @Description Get the total number of items in user's cart
+// @Tags Cart
+// @Produce json
+// @Success 200 {object} map[string]int64
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/cart/count [get]
+func (h *CartHandler) GetCartItemCount(c *gin.Context) {
+    // Get user ID from JWT token
+    userIDInterface, exists := c.Get("user_id")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "User ID not found",
+        })
+        return
+    }
+
+    userID, ok := userIDInterface.(uint)
+    if !ok {
+        c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+            Error:   "unauthorized",
+            Message: "Invalid user ID",
+        })
+        return
+    }
+
+    // Call service to get cart count
+    count, err := h.cartService.GetCartItemCount(userID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+            Error:   "get_cart_count_failed",
+            Message: err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, responses.SuccessResponse{
+        Message: "Cart count retrieved successfully",
+        Data:    gin.H{"count": count},
+    })
+}</code></pre>
+
+                    <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #1976d2; margin-bottom: 1rem;">🔍 Penjelasan Handler Layer</h4>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>Constructor:</strong></p>
+                        <ul style="color: #1565c0; margin-bottom: 1rem;">
+                            <li><strong>CartHandler</strong> - HTTP layer untuk handle request/response</li>
+                            <li><strong>cartService</strong> - Dependency ke service layer</li>
+                            <li>Clean architecture pattern</li>
+                        </ul>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>AddToCart Handler Flow:</strong></p>
+                        <ol style="color: #1565c0; margin-bottom: 1rem;">
+                            <li><strong>Extract User ID</strong> - Ambil user ID dari JWT token (dari middleware)</li>
+                            <li><strong>Type Assertion</strong> - Pastikan user ID adalah uint</li>
+                            <li><strong>Bind Request</strong> - Parse JSON request ke struct</li>
+                            <li><strong>Validate Request</strong> - Jalankan custom validation</li>
+                            <li><strong>Call Service</strong> - Panggil business logic</li>
+                            <li><strong>Return Response</strong> - Kirim response dengan status code yang sesuai</li>
+                        </ol>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>Handler Features:</strong></p>
+                        <ul style="color: #1565c0;">
+                            <li>JWT authentication integration</li>
+                            <li>Request validation dan error handling</li>
+                            <li>Consistent response format</li>
+                            <li>Proper HTTP status codes</li>
+                            <li>Swagger documentation annotations</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 7. Menambahkan Routes ke main.go</h3>
+                    <p>Kita tambahkan cart routes ke file <code>main.go</code>:</p>
+                    
+                    <pre><code>// Initialize handlers
+authHandler := handlers.NewAuthHandler()
+categoryHandler := handlers.NewCategoryHandler()
+productHandler := handlers.NewProductHandler()
+userManagementHandler := handlers.NewUserManagementHandler()
+transactionHandler := handlers.NewTransactionHandler()
+profileHandler := handlers.NewProfileHandler()
+cartHandler := handlers.NewCartHandler()
+
+// Cart routes (customer only)
+cart := protected.Group("/cart")
+{
+    cart.POST("", cartHandler.AddToCart)
+    cart.GET("", cartHandler.GetCart)
+    cart.PUT("/:product_id", cartHandler.UpdateCartItem)
+    cart.DELETE("/:product_id", cartHandler.RemoveFromCart)
+    cart.DELETE("/clear", cartHandler.ClearCart)
+    cart.GET("/count", cartHandler.GetCartItemCount)
+}</code></pre>
+
+                    <div style="background: #f1f8e9; border-left: 4px solid #8bc34a; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #689f38; margin-bottom: 1rem;">🔍 Penjelasan Routes</h4>
+                        <p style="color: #558b2f; margin-bottom: 1rem;"><strong>Route Structure:</strong></p>
+                        <ul style="color: #558b2f; margin-bottom: 1rem;">
+                            <li><strong>protected.Group("/cart")</strong> - Route group yang memerlukan authentication</li>
+                            <li><strong>RESTful Design</strong> - Mengikuti konvensi REST API</li>
+                            <li><strong>Parameter Routes</strong> - <code>:product_id</code> untuk dynamic parameter</li>
+                            <li><strong>HTTP Methods</strong> - POST (create), GET (read), PUT (update), DELETE (delete)</li>
+                        </ul>
+                        <p style="color: #558b2f; margin-bottom: 1rem;"><strong>Available Endpoints:</strong></p>
+                        <ul style="color: #558b2f;">
+                            <li><code>POST /api/v1/cart</code> - Add item to cart</li>
+                            <li><code>GET /api/v1/cart</code> - Get user's cart</li>
+                            <li><code>PUT /api/v1/cart/{product_id}</code> - Update cart item quantity</li>
+                            <li><code>DELETE /api/v1/cart/{product_id}</code> - Remove item from cart</li>
+                            <li><code>DELETE /api/v1/cart/clear</code> - Clear entire cart</li>
+                            <li><code>GET /api/v1/cart/count</code> - Get cart item count</li>
+                        </ul>
+                    </div>
+
+                    <h3>🧪 Testing Cart API</h3>
+                    <p>Sekarang kita test API yang sudah dibuat menggunakan Postman atau curl:</p>
+
+                    <h4>1. Test Add to Cart</h4>
+                    <pre><code>POST http://localhost:8080/api/v1/cart
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+    "product_id": 1,
+    "quantity": 2
+}</code></pre>
+
+                    <h4>2. Test Get Cart</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/cart
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>3. Test Update Cart Item</h4>
+                    <pre><code>PUT http://localhost:8080/api/v1/cart/1
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+    "quantity": 3
+}</code></pre>
+
+                    <h4>4. Test Remove from Cart</h4>
+                    <pre><code>DELETE http://localhost:8080/api/v1/cart/1
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>5. Test Clear Cart</h4>
+                    <pre><code>DELETE http://localhost:8080/api/v1/cart/clear
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>6. Test Get Cart Count</h4>
+                    <pre><code>GET http://localhost:8080/api/v1/cart/count
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h4>7. Expected Response Format</h4>
+                    <pre><code>{
+    "message": "Cart retrieved successfully",
+    "data": {
+        "items": [
+            {
+                "id": 1,
+                "user_id": 1,
+                "product_id": 1,
+                "product_name": "Laptop Gaming",
+                "product_price": 15000000,
+                "product_image": "/uploads/products/laptop.jpg",
+                "quantity": 2,
+                "subtotal": 30000000,
+                "created_at": "2024-01-15 10:30:00",
+                "updated_at": "2024-01-15 10:30:00"
+            }
+        ],
+        "total_items": 2,
+        "total_price": 30000000
+    }
+}</code></pre>
+
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #155724; margin-bottom: 1rem;">🎉 Selamat! Cart Management API Selesai!</h3>
+                        <p style="color: #155724; margin-bottom: 0;">Dengan Cart Management API yang lengkap, customer sekarang dapat mengelola keranjang belanja mereka dengan mudah dan aman!</p>
+                    </div>
+
+                    <h3>🔍 Fitur Cart Management yang Tersedia</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 2rem 0;">
+                        <thead>
+                            <tr style="background: #f8f9fa;">
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Endpoint</th>
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Method</th>
+                                <th style="border: 1px solid #dee2e6; padding: 1rem; text-align: left;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">POST</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Add item to cart</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">GET</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Get user's cart</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart/{product_id}</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">PUT</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Update cart item quantity</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart/{product_id}</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">DELETE</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Remove item from cart</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart/clear</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">DELETE</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Clear entire cart</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;"><code>/api/v1/cart/count</code></td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">GET</td>
+                                <td style="border: 1px solid #dee2e6; padding: 1rem;">Get cart item count</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>🔒 Keamanan Cart API</h3>
+                    <ul>
+                        <li>✅ <strong>Authentication Required</strong> - Semua endpoint memerlukan JWT token</li>
+                        <li>✅ <strong>User Isolation</strong> - User hanya bisa mengakses cart mereka sendiri</li>
+                        <li>✅ <strong>Stock Validation</strong> - Validasi stok produk sebelum menambah ke cart</li>
+                        <li>✅ <strong>Input Validation</strong> - Semua input divalidasi dengan baik</li>
+                        <li>✅ <strong>Error Handling</strong> - Error handling yang konsisten</li>
+                    </ul>
+
+                    <h3>🚀 Langkah Selanjutnya</h3>
+                    <p>Dengan Cart Management API yang sudah selesai, Anda dapat:</p>
+                    <ul>
+                        <li>✅ <strong>Integrate dengan Frontend</strong> - Gunakan API ini untuk fitur cart di website</li>
+                        <li>✅ <strong>Add Cart Persistence</strong> - Cart akan tersimpan di database</li>
+                        <li>✅ <strong>Implement Cart Expiry</strong> - Tambahkan fitur cart expiry setelah periode tertentu</li>
+                        <li>✅ <strong>Add Cart Notifications</strong> - Notifikasi ketika stok produk habis</li>
+                        <li>✅ <strong>Create Checkout Flow</strong> - Lanjutkan ke proses checkout dan payment</li>
+                    </ul>
+
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2e7d32; margin-bottom: 1rem;">🌱 Refleksi Pembelajaran</h4>
+                        <p style="color: #388e3c; margin-bottom: 1rem;">Anda telah berhasil menguasai:</p>
+                        <ul style="color: #388e3c;">
+                            <li>✅ <strong>CRUD Operations</strong> - Implementasi lengkap Create, Read, Update, Delete</li>
+                            <li>✅ <strong>Business Logic</strong> - Logika bisnis untuk cart management</li>
+                            <li>✅ <strong>Stock Management</strong> - Validasi stok produk</li>
+                            <li>✅ <strong>User Authentication</strong> - Integrasi dengan JWT authentication</li>
+                            <li>✅ <strong>Data Relationships</strong> - Relasi antara User, Product, dan Cart</li>
+                            <li>✅ <strong>Response Structure</strong> - Struktur response yang informatif</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-top: 1rem; font-style: italic;">"Cart management yang baik adalah fondasi untuk e-commerce yang sukses. Dengan sistem yang aman dan user-friendly, customer dapat berbelanja dengan nyaman dan percaya diri."</p>
+                    </div>
+                `
+            },
+            {
+                id: 'chapter19',
+                title: 'Bab 19: Checkout & Payment API - Proses Pembayaran untuk Customer',
+                meta: 'Halaman 19 dari 50 • Dibaca 25 menit',
+                content: `
+                    <h2>💳 Bab 19: Checkout & Payment API - Proses Pembayaran untuk Customer</h2>
+                    <p>Selamat! Sekarang kita akan membuat Checkout & Payment API yang memungkinkan customer untuk melakukan checkout dari keranjang belanja dan mengelola transaksi pembayaran. Di bab ini, kita akan mengimplementasikan sistem checkout lengkap dengan fitur summary, proses checkout, konfirmasi pembayaran, dan tracking transaksi.</p>
+
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">🎯 Apa yang Akan Kita Buat di Bab Ini?</h3>
+                        <p style="color: #495057; margin-bottom: 0;">Kita akan membuat Checkout & Payment API yang lengkap dengan fitur checkout summary, proses checkout, konfirmasi pembayaran, dan manajemen transaksi. Customer dapat melihat ringkasan checkout, memproses pembayaran, mengkonfirmasi pembayaran, dan melacak status transaksi mereka.</p>
+                    </div>
+
+                    <h3>📋 Prasyarat</h3>
+                    <p>Sebelum memulai, pastikan Anda sudah menyelesaikan:</p>
+                    <ul>
+                        <li>✅ Bab 6-8: Modul Authentication (Register, Login, Logout)</li>
+                        <li>✅ Bab 11: Modul CRUD Product - Role Admin</li>
+                        <li>✅ Bab 17: Public Product API</li>
+                        <li>✅ Bab 18: Cart Management API</li>
+                        <li>✅ Tabel users, products, carts, dan transactions sudah ada di database</li>
+                        <li>✅ Ada data produk dan cart items</li>
+                        <li>✅ User sudah bisa login dan mendapat JWT token</li>
+                    </ul>
+
+                    <h3>🗄️ Database Schema</h3>
+                    <p>Sebelum memulai, kita perlu memastikan tabel transactions dan transaction_details sudah ada. Berikut adalah schema database yang akan kita gunakan:</p>
+
+                    <h4>📊 Tabel Transactions</h4>
+                    <pre><code>CREATE TABLE transactions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    status ENUM('pending', 'paid', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
+    total_amount DECIMAL(10,2) NOT NULL,
+    shipping_address TEXT NOT NULL,
+    payment_method ENUM('bank_transfer', 'credit_card', 'e_wallet', 'cod') NOT NULL,
+    payment_url VARCHAR(255),
+    payment_proof VARCHAR(255),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);</code></pre>
+
+                    <h4>📊 Tabel Transaction Details</h4>
+                    <pre><code>CREATE TABLE transaction_details (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    transaction_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);</code></pre>
+
+                    <div style="background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 1rem; margin: 2rem 0;">
+                        <strong>🔍 Catatan Penting:</strong> Tabel transactions menyimpan informasi transaksi utama, sedangkan transaction_details menyimpan detail item-item yang dibeli. Relasi one-to-many memungkinkan satu transaksi memiliki banyak detail item.
+                    </div>
+
+                    <h3>🏗️ Struktur File yang Akan Dibuat</h3>
+                    <p>Kita akan membuat file-file berikut untuk modul Checkout & Payment:</p>
+                    <ul>
+                        <li><code>requests/checkout_request.go</code> - Request structs untuk checkout operations</li>
+                        <li><code>responses/checkout_response.go</code> - Response structs untuk checkout data</li>
+                        <li><code>services/checkout_service.go</code> - Service layer untuk checkout business logic</li>
+                        <li><code>handlers/checkout_handler.go</code> - Handler layer untuk checkout HTTP endpoints</li>
+                    </ul>
+
+                    <h3>📝 1. Membuat Request Structs</h3>
+                    <p>Pertama, kita buat request structs untuk checkout operations di file <code>requests/checkout_request.go</code>:</p>
+                    
+                    <pre><code>package requests
+
+import "errors"
+
+type CheckoutRequest struct {
+	ShippingAddress string \`json:"shipping_address" binding:"required"\`
+	PaymentMethod   string \`json:"payment_method" binding:"required"\`
+	Notes           string \`json:"notes"\`
+}
+
+func (r *CheckoutRequest) Validate() error {
+	if r.ShippingAddress == "" {
+		return errors.New("shipping_address is required")
+	}
+	if r.PaymentMethod == "" {
+		return errors.New("payment_method is required")
+	}
+
+	// Validate payment method
+	validPaymentMethods := []string{"bank_transfer", "credit_card", "e_wallet", "cod"}
+	isValid := false
+	for _, method := range validPaymentMethods {
+		if r.PaymentMethod == method {
+			isValid = true
+			break
+		}
+	}
+	if !isValid {
+		return errors.New("invalid payment method")
+	}
+
+	return nil
+}
+
+type ConfirmPaymentRequest struct {
+	PaymentProof string \`json:"payment_proof" binding:"required"\`
+	Notes        string \`json:"notes"\`
+}
+
+func (r *ConfirmPaymentRequest) Validate() error {
+	if r.PaymentProof == "" {
+		return errors.New("payment_proof is required")
+	}
+	return nil
+}</code></pre>
+
+                    <div style="background: #e8f4fd; border-left: 4px solid #2196f3; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #1976d2; margin-bottom: 1rem;">🔍 Penjelasan Request Structs</h4>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>CheckoutRequest:</strong></p>
+                        <ul style="color: #1565c0; margin-bottom: 1rem;">
+                            <li><strong>ShippingAddress</strong> - Alamat pengiriman (required)</li>
+                            <li><strong>PaymentMethod</strong> - Metode pembayaran (required, harus valid)</li>
+                            <li><strong>Notes</strong> - Catatan tambahan (optional)</li>
+                        </ul>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>ConfirmPaymentRequest:</strong></p>
+                        <ul style="color: #1565c0;">
+                            <li><strong>PaymentProof</strong> - Bukti pembayaran (required)</li>
+                            <li><strong>Notes</strong> - Catatan tambahan (optional)</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 2. Membuat Response Structs</h3>
+                    <p>Kita buat response structs untuk checkout data di file <code>responses/checkout_response.go</code>:</p>
+                    
+                    <pre><code>package responses
+
+import "tokogo/models"
+
+type CheckoutResponse struct {
+	TransactionID   uint                   \`json:"transaction_id"\`
+	UserID          uint                   \`json:"user_id"\`
+	Status          string                 \`json:"status"\`
+	TotalAmount     float64                \`json:"total_amount"\`
+	ShippingAddress string                 \`json:"shipping_address"\`
+	PaymentMethod   string                 \`json:"payment_method"\`
+	PaymentURL      string                 \`json:"payment_url,omitempty"\`
+	Items           []CheckoutItemResponse \`json:"items"\`
+	CreatedAt       string                 \`json:"created_at"\`
+	UpdatedAt       string                 \`json:"updated_at"\`
+}
+
+type CheckoutItemResponse struct {
+	ProductID    uint    \`json:"product_id"\`
+	ProductName  string  \`json:"product_name"\`
+	ProductPrice float64 \`json:"product_price"\`
+	Quantity     int     \`json:"quantity"\`
+	Subtotal     float64 \`json:"subtotal"\`
+}
+
+type CheckoutSummaryResponse struct {
+	TotalItems      int     \`json:"total_items"\`
+	TotalAmount     float64 \`json:"total_amount"\`
+	ShippingCost    float64 \`json:"shipping_cost"\`
+	GrandTotal      float64 \`json:"grand_total"\`
+	PaymentMethod   string  \`json:"payment_method"\`
+	ShippingAddress string  \`json:"shipping_address"\`
+}</code></pre>
+
+                    <div style="background: #e8f4fd; border-left: 4px solid #2196f3; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #1976d2; margin-bottom: 1rem;">🔍 Penjelasan Response Structs</h4>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>CheckoutResponse:</strong> Response lengkap untuk transaksi checkout</p>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>CheckoutItemResponse:</strong> Detail item dalam transaksi</p>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>CheckoutSummaryResponse:</strong> Ringkasan checkout sebelum proses pembayaran</p>
+                    </div>
+
+                    <h3>📝 3. Membuat Service Layer</h3>
+                    <p>Kita buat service layer untuk checkout business logic di file <code>services/checkout_service.go</code>:</p>
+                    
+                    <pre><code>package services
+
+import (
+	"errors"
+	"fmt"
+	"tokogo/config"
+	"tokogo/models"
+	"tokogo/repositories"
+	"tokogo/requests"
+	"tokogo/responses"
+)
+
+type CheckoutService struct {
+	cartRepo        *repositories.CartRepository
+	productRepo     *repositories.ProductRepository
+	transactionRepo *repositories.TransactionRepository
+}
+
+func NewCheckoutService() *CheckoutService {
+	return &CheckoutService{
+		cartRepo:        repositories.NewCartRepository(config.DB),
+		productRepo:     repositories.NewProductRepository(config.DB),
+		transactionRepo: repositories.NewTransactionRepository(config.DB),
+	}
+}</code></pre>
+
+                    <h4>🔧 Method GetCheckoutSummary</h4>
+                    <pre><code>func (s *CheckoutService) GetCheckoutSummary(userID uint, req requests.CheckoutRequest) (*responses.CheckoutSummaryResponse, error) {
+	// Get user's cart
+	carts, err := s.cartRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, errors.New("failed to get cart")
+	}
+
+	if len(carts) == 0 {
+		return nil, errors.New("cart is empty")
+	}
+
+	// Calculate shipping cost
+	shippingCost := s.calculateShippingCost(carts)
+
+	// Create checkout summary
+	summary := responses.CreateCheckoutSummaryResponse(carts, shippingCost, req.PaymentMethod, req.ShippingAddress)
+
+	return &summary, nil
+}</code></pre>
+
+                    <h4>🔧 Method ProcessCheckout</h4>
+                    <pre><code>func (s *CheckoutService) ProcessCheckout(userID uint, req requests.CheckoutRequest) (*responses.CheckoutResponse, error) {
+	// Get user's cart
+	carts, err := s.cartRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, errors.New("failed to get cart")
+	}
+
+	if len(carts) == 0 {
+		return nil, errors.New("cart is empty")
+	}
+
+	// Validate stock for all items
+	for _, cart := range carts {
+		product, err := s.productRepo.GetByID(cart.ProductID)
+		if err != nil {
+			return nil, fmt.Errorf("product with ID %d not found", cart.ProductID)
+		}
+
+		if product.Stock < cart.Quantity {
+			return nil, fmt.Errorf("insufficient stock for product %s (available: %d, requested: %d)",
+				product.Name, product.Stock, cart.Quantity)
+		}
+	}
+
+	// Calculate total amount
+	var totalAmount float64
+	for _, cart := range carts {
+		totalAmount += float64(cart.Quantity) * cart.Product.SellingPrice
+	}
+
+	// Add shipping cost
+	shippingCost := s.calculateShippingCost(carts)
+	totalAmount += shippingCost
+
+	// Create transaction
+	transaction := &models.Transaction{
+		UserID:          userID,
+		Status:          "pending",
+		TotalAmount:     totalAmount,
+		ShippingAddress: req.ShippingAddress,
+		PaymentMethod:   req.PaymentMethod,
+		Notes:           req.Notes,
+	}
+
+	// Save transaction
+	if err := s.transactionRepo.Create(transaction); err != nil {
+		return nil, errors.New("failed to create transaction")
+	}
+
+	// Create transaction details and update stock
+	for _, cart := range carts {
+		detail := &models.TransactionDetail{
+			TransactionID: transaction.ID,
+			ProductID:     cart.ProductID,
+			Quantity:      cart.Quantity,
+			Price:         cart.Product.SellingPrice,
+		}
+
+		if err := s.transactionRepo.CreateTransactionDetail(detail); err != nil {
+			return nil, errors.New("failed to create transaction detail")
+		}
+
+		// Update product stock
+		product, _ := s.productRepo.GetByID(cart.ProductID)
+		product.Stock -= cart.Quantity
+		if err := s.productRepo.Update(product); err != nil {
+			return nil, errors.New("failed to update product stock")
+		}
+	}
+
+	// Generate payment URL
+	paymentURL := s.generatePaymentURL(transaction.ID, req.PaymentMethod)
+	transaction.PaymentURL = paymentURL
+
+	if err := s.transactionRepo.Update(transaction); err != nil {
+		return nil, errors.New("failed to update payment URL")
+	}
+
+	// Clear user's cart
+	if err := s.cartRepo.ClearCart(userID); err != nil {
+		fmt.Printf("Warning: Failed to clear cart for user %d: %v\n", userID, err)
+	}
+
+	// Get transaction with details for response
+	createdTransaction, err := s.transactionRepo.GetByID(transaction.ID)
+	if err != nil {
+		return nil, errors.New("failed to retrieve transaction")
+	}
+
+	response := responses.ConvertTransactionToCheckoutResponse(*createdTransaction)
+	return &response, nil
+}</code></pre>
+
+                    <div style="background: #e8f4fd; border-left: 4px solid #2196f3; padding: 1.5rem; margin: 2rem 0;">
+                        <h4 style="color: #1976d2; margin-bottom: 1rem;">🔍 Penjelasan Business Logic</h4>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>GetCheckoutSummary:</strong></p>
+                        <ul style="color: #1565c0; margin-bottom: 1rem;">
+                            <li>Mengambil data cart user</li>
+                            <li>Menghitung biaya pengiriman</li>
+                            <li>Membuat ringkasan checkout</li>
+                        </ul>
+                        <p style="color: #1565c0; margin-bottom: 1rem;"><strong>ProcessCheckout:</strong></p>
+                        <ul style="color: #1565c0;">
+                            <li>Validasi stok produk</li>
+                            <li>Membuat transaksi baru</li>
+                            <li>Membuat detail transaksi</li>
+                            <li>Update stok produk</li>
+                            <li>Generate payment URL</li>
+                            <li>Kosongkan cart</li>
+                        </ul>
+                    </div>
+
+                    <h3>📝 4. Membuat Handler Layer</h3>
+                    <p>Kita buat handler layer untuk checkout HTTP endpoints di file <code>handlers/checkout_handler.go</code>:</p>
+                    
+                    <pre><code>package handlers
+
+import (
+	"net/http"
+	"strconv"
+	"tokogo/requests"
+	"tokogo/responses"
+	"tokogo/services"
+
+	"github.com/gin-gonic/gin"
+)
+
+type CheckoutHandler struct {
+	checkoutService *services.CheckoutService
+}
+
+func NewCheckoutHandler() *CheckoutHandler {
+	return &CheckoutHandler{
+		checkoutService: services.NewCheckoutService(),
+	}
+}</code></pre>
+
+                    <h4>🔧 Endpoint GetCheckoutSummary</h4>
+                    <pre><code>// GetCheckoutSummary godoc
+// @Summary Get checkout summary
+// @Description Get checkout summary with shipping cost calculation
+// @Tags Checkout
+// @Accept json
+// @Produce json
+// @Param checkout body requests.CheckoutRequest true "Checkout data"
+// @Success 200 {object} responses.CheckoutSummaryResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/checkout/summary [post]
+func (h *CheckoutHandler) GetCheckoutSummary(c *gin.Context) {
+	// Get user ID from JWT token
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "User ID not found",
+		})
+		return
+	}
+
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Invalid user ID",
+		})
+		return
+	}
+
+	var req requests.CheckoutRequest
+
+	// Bind and validate request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Validate using method Validate()
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Call service to get checkout summary
+	response, err := h.checkoutService.GetCheckoutSummary(userID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "get_checkout_summary_failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, responses.SuccessResponse{
+		Message: "Checkout summary retrieved successfully",
+		Data:    response,
+	})
+}</code></pre>
+
+                    <h4>🔧 Endpoint ProcessCheckout</h4>
+                    <pre><code>// ProcessCheckout godoc
+// @Summary Process checkout
+// @Description Process checkout from cart to transaction
+// @Tags Checkout
+// @Accept json
+// @Produce json
+// @Param checkout body requests.CheckoutRequest true "Checkout data"
+// @Success 201 {object} responses.CheckoutResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/v1/checkout [post]
+func (h *CheckoutHandler) ProcessCheckout(c *gin.Context) {
+	// Get user ID from JWT token
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "User ID not found",
+		})
+		return
+	}
+
+	userID, ok := userIDInterface.(uint)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, responses.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Invalid user ID",
+		})
+		return
+	}
+
+	var req requests.CheckoutRequest
+
+	// Bind and validate request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Validate using method Validate()
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "validation_error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Call service to process checkout
+	response, err := h.checkoutService.ProcessCheckout(userID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, responses.ErrorResponse{
+			Error:   "checkout_failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, responses.SuccessResponse{
+		Message: "Checkout processed successfully",
+		Data:    response,
+	})
+}</code></pre>
+
+                    <h3>📝 5. Menambahkan Routes di main.go</h3>
+                    <p>Kita perlu menambahkan routes untuk checkout di file <code>main.go</code>:</p>
+                    
+                    <pre><code>// Initialize handlers
+checkoutHandler := handlers.NewCheckoutHandler()
+
+// Checkout routes (customer only)
+checkout := protected.Group("/checkout")
+{
+	checkout.POST("/summary", checkoutHandler.GetCheckoutSummary)
+	checkout.POST("", checkoutHandler.ProcessCheckout)
+	checkout.POST("/:transaction_id/confirm", checkoutHandler.ConfirmPayment)
+	checkout.GET("/transactions", checkoutHandler.GetUserTransactions)
+	checkout.GET("/transactions/:transaction_id", checkoutHandler.GetTransactionByID)
+}</code></pre>
+
+                    <h3>🧪 Testing API</h3>
+                    <p>Sekarang kita akan test API checkout yang sudah dibuat. Pastikan server sudah berjalan:</p>
+                    
+                    <h4>1. Test Get Checkout Summary</h4>
+                    <pre><code>POST /api/v1/checkout/summary
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+    "shipping_address": "Jl. Sudirman No. 123, Jakarta",
+    "payment_method": "bank_transfer",
+    "notes": "Please deliver in the morning"
+}</code></pre>
+
+                    <h4>2. Test Process Checkout</h4>
+                    <pre><code>POST /api/v1/checkout
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+    "shipping_address": "Jl. Sudirman No. 123, Jakarta",
+    "payment_method": "bank_transfer",
+    "notes": "Please deliver in the morning"
+}</code></pre>
+
+                    <h4>3. Test Confirm Payment</h4>
+                    <pre><code>POST /api/v1/checkout/1/confirm
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+    "payment_proof": "payment_receipt_123.jpg",
+    "notes": "Payment completed via bank transfer"
+}</code></pre>
+
+                    <h4>4. Test Get User Transactions</h4>
+                    <pre><code>GET /api/v1/checkout/transactions
+Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+                    <h3>📊 Response Examples</h3>
+                    
+                    <h4>Checkout Summary Response</h4>
+                    <pre><code>{
+    "message": "Checkout summary retrieved successfully",
+    "data": {
+        "total_items": 3,
+        "total_amount": 150000,
+        "shipping_cost": 15000,
+        "grand_total": 165000,
+        "payment_method": "bank_transfer",
+        "shipping_address": "Jl. Sudirman No. 123, Jakarta"
+    }
+}</code></pre>
+
+                    <h4>Process Checkout Response</h4>
+                    <pre><code>{
+    "message": "Checkout processed successfully",
+    "data": {
+        "transaction_id": 1,
+        "user_id": 1,
+        "status": "pending",
+        "total_amount": 165000,
+        "shipping_address": "Jl. Sudirman No. 123, Jakarta",
+        "payment_method": "bank_transfer",
+        "payment_url": "https://payment.example.com/bank-transfer?transaction_id=1",
+        "items": [
+            {
+                "product_id": 1,
+                "product_name": "Laptop Gaming",
+                "product_price": 100000,
+                "quantity": 1,
+                "subtotal": 100000
+            },
+            {
+                "product_id": 2,
+                "product_name": "Mouse Wireless",
+                "product_price": 50000,
+                "quantity": 1,
+                "subtotal": 50000
+            }
+        ],
+        "created_at": "2024-01-15 10:30:00",
+        "updated_at": "2024-01-15 10:30:00"
+    }
+}</code></pre>
+
+                    <h3>🔧 Fitur Tambahan</h3>
+                    <p>Berikut adalah beberapa fitur tambahan yang bisa dikembangkan:</p>
+                    
+                    <h4>1. Shipping Cost Calculation</h4>
+                    <pre><code>func (s *CheckoutService) calculateShippingCost(carts []models.Cart) float64 {
+	var totalWeight float64
+	for _, cart := range carts {
+		totalWeight += float64(cart.Quantity)
+	}
+
+	// Shipping cost: 5000 per kg, minimum 10000
+	shippingCost := totalWeight * 5000
+	if shippingCost < 10000 {
+		shippingCost = 10000
+	}
+
+	return shippingCost
+}</code></pre>
+
+                    <h4>2. Payment URL Generation</h4>
+                    <pre><code>func (s *CheckoutService) generatePaymentURL(transactionID uint, paymentMethod string) string {
+	baseURL := "https://payment.example.com"
+
+	switch paymentMethod {
+	case "bank_transfer":
+		return fmt.Sprintf("%s/bank-transfer?transaction_id=%d", baseURL, transactionID)
+	case "credit_card":
+		return fmt.Sprintf("%s/credit-card?transaction_id=%d", baseURL, transactionID)
+	case "e_wallet":
+		return fmt.Sprintf("%s/e-wallet?transaction_id=%d", baseURL, transactionID)
+	case "cod":
+		return "" // COD doesn't need payment URL
+	default:
+		return fmt.Sprintf("%s/payment?transaction_id=%d", baseURL, transactionID)
+	}
+}</code></pre>
+
+                    <h3>🎯 Kesimpulan</h3>
+                    <p>Selamat! Anda telah berhasil membuat Checkout & Payment API yang lengkap. Berikut adalah ringkasan apa yang telah kita buat:</p>
+                    
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2e7d32; margin-bottom: 1rem;">✅ Fitur yang Telah Dibuat</h4>
+                        <ul style="color: #388e3c;">
+                            <li>✅ <strong>Checkout Summary</strong> - Ringkasan checkout dengan perhitungan biaya</li>
+                            <li>✅ <strong>Process Checkout</strong> - Proses checkout dari cart ke transaksi</li>
+                            <li>✅ <strong>Stock Validation</strong> - Validasi stok produk sebelum checkout</li>
+                            <li>✅ <strong>Transaction Creation</strong> - Pembuatan transaksi dan detail transaksi</li>
+                            <li>✅ <strong>Payment URL Generation</strong> - Generate URL pembayaran</li>
+                            <li>✅ <strong>Cart Clearing</strong> - Mengosongkan cart setelah checkout</li>
+                            <li>✅ <strong>Payment Confirmation</strong> - Konfirmasi pembayaran</li>
+                            <li>✅ <strong>Transaction Tracking</strong> - Melacak status transaksi</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #856404; margin-bottom: 1rem;">🚀 Pengembangan Selanjutnya</h4>
+                        <ul style="color: #856404;">
+                            <li>✅ <strong>Payment Gateway Integration</strong> - Integrasi dengan payment gateway nyata</li>
+                            <li>✅ <strong>Order Status Management</strong> - Manajemen status pesanan (shipped, delivered)</li>
+                            <li>✅ <strong>Email Notifications</strong> - Notifikasi email untuk transaksi</li>
+                            <li>✅ <strong>Invoice Generation</strong> - Generate invoice PDF</li>
+                            <li>✅ <strong>Refund System</strong> - Sistem refund dan cancel order</li>
+                            <li>✅ <strong>Shipping Tracking</strong> - Tracking pengiriman</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #e8f5e8; border: 1px solid #4caf50; padding: 2rem; border-radius: 5px; margin: 2rem 0;">
+                        <h4 style="color: #2e7d32; margin-bottom: 1rem;">🌱 Refleksi Pembelajaran</h4>
+                        <p style="color: #388e3c; margin-bottom: 1rem;">Anda telah berhasil menguasai:</p>
+                        <ul style="color: #388e3c;">
+                            <li>✅ <strong>Complex Business Logic</strong> - Logika bisnis yang kompleks untuk checkout</li>
+                            <li>✅ <strong>Transaction Management</strong> - Manajemen transaksi dan detail transaksi</li>
+                            <li>✅ <strong>Stock Management</strong> - Validasi dan update stok produk</li>
+                            <li>✅ <strong>Payment Processing</strong> - Proses pembayaran dan konfirmasi</li>
+                            <li>✅ <strong>Data Relationships</strong> - Relasi kompleks antara User, Cart, Product, dan Transaction</li>
+                            <li>✅ <strong>Error Handling</strong> - Penanganan error yang komprehensif</li>
+                        </ul>
+                        <p style="color: #2e7d32; margin-top: 1rem; font-style: italic;">"Checkout yang aman dan user-friendly adalah kunci sukses e-commerce. Dengan sistem yang terintegrasi, customer dapat melakukan pembelian dengan percaya diri dan transparan."</p>
                     </div>
                 `
             }

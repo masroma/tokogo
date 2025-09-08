@@ -1,13 +1,25 @@
 {
 	"info": {
-		"_postman_id": "12345678-1234-1234-1234-123456789012",
-		"name": "TokoGo API - Complete Collection",
-		"description": "Collection untuk testing API TokoGo - Authentication, Category Management, Product Management & User Management",
+		"_postman_id": "tokogo-api-collection-2024",
+		"name": "TokoGo API - Complete E-commerce Collection",
+		"description": "Complete API collection for TokoGo e-commerce platform",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	],
 	"item": [
 		{
-			"name": "Public Authentication",
+			"name": "🔐 Authentication",
 			"item": [
 				{
 					"name": "Register User",
@@ -25,17 +37,9 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/register",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"register"
-							]
-						},
-						"description": "Endpoint untuk registrasi user baru"
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						}
 					},
 					"event": [
 						{
@@ -43,180 +47,14 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test('Status code is 201', function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test('Response has message', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson).to.have.property('message');",
-									"});",
-									"",
-									"pm.test('Response has user data', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson.data).to.have.property('user');",
-									"    pm.expect(responseJson.data).to.have.property('token');",
-									"});"
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.collectionVariables.set('auth_token', response.token);",
+									"    }",
+									"}"
 								]
 							}
-						}
-					],
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"password123\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"johndoe\",\n            \"email\": \"john@example.com\",\n            \"role\": \"customer\",\n            \"created_at\": \"2024-01-15 10:30:00\"\n        },\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n    }\n}"
-						},
-						{
-							"name": "Validation Error",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"username\": \"jo\",\n    \"email\": \"invalid-email\",\n    \"password\": \"123\",\n    \"confirm_password\": \"123\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"register"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'RegisterRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag\"\n}"
-						},
-						{
-							"name": "Email Already Registered",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"username\": \"johndoe2\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"password123\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"register"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"register_failed\",\n    \"message\": \"email already registered\"\n}"
-						},
-						{
-							"name": "Password Mismatch",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"username\": \"johndoe3\",\n    \"email\": \"john3@example.com\",\n    \"password\": \"password123\",\n    \"confirm_password\": \"differentpassword\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"register"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"password and confirm_password must match\"\n}"
 						}
 					]
 				},
@@ -236,17 +74,9 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/login",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						},
-						"description": "Endpoint untuk login user"
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
 					},
 					"event": [
 						{
@@ -254,209 +84,22 @@
 							"script": {
 								"type": "text/javascript",
 								"exec": [
-									"pm.test('Status code is 200', function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response has message', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson).to.have.property('message');",
-									"});",
-									"",
-									"pm.test('Response has user data and token', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson.data).to.have.property('user');",
-									"    pm.expect(responseJson.data).to.have.property('token');",
-									"    pm.expect(responseJson.data.token).to.be.a('string');",
-									"});",
-									"",
-									"pm.test('User data has required fields', function () {",
-									"    const responseJson = pm.response.json();",
-									"    const user = responseJson.data.user;",
-									"    pm.expect(user).to.have.property('id');",
-									"    pm.expect(user).to.have.property('name');",
-									"    pm.expect(user).to.have.property('email');",
-									"    pm.expect(user).to.have.property('role');",
-									"    pm.expect(user).to.have.property('created_at');",
-									"});"
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.collectionVariables.set('auth_token', response.token);",
+									"    }",
+									"}"
 								]
 							}
 						}
-					],
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/login",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"login"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"message\": \"Login successful\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"johndoe\",\n            \"email\": \"john@example.com\",\n            \"role\": \"customer\",\n            \"created_at\": \"2024-01-15 10:30:00\"\n        },\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n    }\n}"
-						},
-						{
-							"name": "Validation Error",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"invalid-email\",\n    \"password\": \"\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/login",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"login"
-									]
-								}
-							},
-							"status": "Bad Request",
-							"code": 400,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'LoginRequest.Email' Error:Field validation for 'Email' failed on the 'email' tag\"\n}"
-						},
-						{
-							"name": "Invalid Credentials",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"wrongpassword\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/login",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"login"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"login_failed\",\n    \"message\": \"invalid credentials\"\n}"
-						},
-						{
-							"name": "User Not Found",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"email\": \"nonexistent@example.com\",\n    \"password\": \"password123\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/login",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"login"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"login_failed\",\n    \"message\": \"user not found\"\n}"
-						}
 					]
-				}
-			],
-			"description": "Public authentication endpoints (tidak perlu token)"
-		},
-		{
-			"name": "Protected Authentication",
-			"item": [
+				},
 				{
 					"name": "Logout User",
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
 							{
 								"key": "Authorization",
 								"value": "Bearer {{auth_token}}"
@@ -464,160 +107,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"logout"
-							]
-						},
-						"description": "Endpoint untuk logout user (memerlukan authentication)"
-					},
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Status code is 200', function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response has message', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson).to.have.property('message');",
-									"});",
-									"",
-									"// Clear auth token after successful logout",
-									"if (pm.response.code === 200) {",
-									"    pm.collectionVariables.set('auth_token', '');",
-									"    console.log('Auth token cleared after logout');",
-									"}"
-								]
-							}
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "logout"]
 						}
-					],
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/logout",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"logout"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"message\": \"Logout successful\"\n}"
-						},
-						{
-							"name": "Unauthorized - No Token",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/logout",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"logout"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"unauthorized\",\n    \"message\": \"Authorization header is required\"\n}"
-						},
-						{
-							"name": "Unauthorized - Invalid Token",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer invalid_token_here"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/logout",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"logout"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"unauthorized\",\n    \"message\": \"Invalid or expired token\"\n}"
-						}
-					]
+					}
 				},
 				{
-					"name": "Get User Profile",
+					"name": "Get Profile",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -628,153 +124,386 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"profile"
-							]
-						},
-						"description": "Endpoint untuk mengambil profile user (memerlukan authentication)"
-					},
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Status code is 200', function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response has message', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson).to.have.property('message');",
-									"});",
-									"",
-									"pm.test('Response has user data', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson.data).to.have.property('id');",
-									"    pm.expect(responseJson.data).to.have.property('name');",
-									"    pm.expect(responseJson.data).to.have.property('email');",
-									"    pm.expect(responseJson.data).to.have.property('role');",
-									"    pm.expect(responseJson.data).to.have.property('created_at');",
-									"});"
-								]
-							}
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "profile"]
 						}
-					],
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/profile",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"profile"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"message\": \"Profile retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"johndoe\",\n        \"email\": \"john@example.com\",\n        \"role\": \"customer\",\n        \"created_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-						},
-						{
-							"name": "Unauthorized - No Token",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/profile",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"profile"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"unauthorized\",\n    \"message\": \"Authorization header is required\"\n}"
-						},
-						{
-							"name": "User Not Found",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/auth/profile",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"auth",
-										"profile"
-									]
-								}
-							},
-							"status": "Not Found",
-							"code": 404,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"user_not_found\",\n    \"message\": \"user not found\"\n}"
-						}
-					]
+					}
 				}
-			],
-			"description": "Protected authentication endpoints (memerlukan JWT token)"
+			]
 		},
 		{
-			"name": "Admin Routes",
+			"name": "🌐 Public Endpoints",
+			"item": [
+				{
+					"name": "Get All Categories (Public)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "public", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get All Products (Public)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/products?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "public", "products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Product by ID (Public)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "public", "products", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Products by Category (Public)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/products/categories/1?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "public", "products", "categories", "1"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 User Profile",
+			"item": [
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe Updated\",\n    \"email\": \"john.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"newpassword123\",\n    \"confirm_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "change-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🛒 Shopping Cart",
+			"item": [
+				{
+					"name": "Add to Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product_id\": 1,\n    \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart"]
+						}
+					}
+				},
+				{
+					"name": "Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart"]
+						}
+					}
+				},
+				{
+					"name": "Update Cart Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart", "1"]
+						}
+					}
+				},
+				{
+					"name": "Remove from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart", "1"]
+						}
+					}
+				},
+				{
+					"name": "Clear Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart/clear",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart", "clear"]
+						}
+					}
+				},
+				{
+					"name": "Get Cart Item Count",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cart/count",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cart", "count"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💳 Checkout & Transactions",
+			"item": [
+				{
+					"name": "Get Checkout Summary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shipping_address\": \"Jl. Sudirman No. 123, Jakarta\",\n    \"payment_method\": \"bank_transfer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/checkout/summary",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "checkout", "summary"]
+						}
+					}
+				},
+				{
+					"name": "Process Checkout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shipping_address\": \"Jl. Sudirman No. 123, Jakarta\",\n    \"payment_method\": \"bank_transfer\",\n    \"notes\": \"Please deliver in the morning\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/checkout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "checkout"]
+						}
+					}
+				},
+				{
+					"name": "Confirm Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"payment_proof\": \"payment_proof_image.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/checkout/1/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "checkout", "1", "confirm"]
+						}
+					}
+				},
+				{
+					"name": "Get User Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/checkout/transactions?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "checkout", "transactions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/checkout/transactions/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "checkout", "transactions", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👑 Admin - Dashboard",
 			"item": [
 				{
 					"name": "Admin Dashboard",
@@ -788,2994 +517,487 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/admin/dashboard",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"admin",
-								"dashboard"
-							]
-						},
-						"description": "Endpoint untuk admin dashboard (memerlukan admin role)"
-					},
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test('Status code is 200', function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test('Response has message and user_id', function () {",
-									"    const responseJson = pm.response.json();",
-									"    pm.expect(responseJson).to.have.property('message');",
-									"    pm.expect(responseJson).to.have.property('user_id');",
-									"});"
-								]
-							}
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "dashboard"]
 						}
-					],
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/dashboard",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"dashboard"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"message\": \"Welcome to admin dashboard\",\n    \"user_id\": 1\n}"
-						},
-						{
-							"name": "Forbidden - Not Admin",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/dashboard",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"dashboard"
-									]
-								}
-							},
-							"status": "Forbidden",
-							"code": 403,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-						},
-						{
-							"name": "Unauthorized - No Token",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/dashboard",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"dashboard"
-									]
-								}
-							},
-							"status": "Unauthorized",
-							"code": 401,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"error\": \"unauthorized\",\n    \"message\": \"Authorization header is required\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Category Management",
-					"item": [
-						{
-							"name": "Create Category",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"Electronics\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/categories",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"categories"
-									]
-								},
-								"description": "Endpoint untuk membuat category baru (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 201', function () {",
-											"    pm.response.to.have.status(201);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has category data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('slug');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Electronics\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories"
-											]
-										}
-									},
-									"status": "Created",
-									"code": 201,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Category created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Electronics\",\n        \"slug\": \"electronics\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"A\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'CreateCategoryRequest.Name' Error:Field validation for 'Name' failed on the 'min' tag\"\n}"
-								},
-								{
-									"name": "Forbidden - Not Admin",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Electronics\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories"
-											]
-										}
-									},
-									"status": "Forbidden",
-									"code": 403,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get All Categories",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/categories?page=1&limit=10",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"categories"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "limit",
-											"value": "10"
-										}
-									]
-								},
-								"description": "Endpoint untuk mengambil semua categories dengan pagination (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has categories data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('categories');",
-											"    pm.expect(responseJson.data).to.have.property('total');",
-											"    pm.expect(responseJson.data).to.have.property('page');",
-											"    pm.expect(responseJson.data).to.have.property('limit');",
-											"    pm.expect(responseJson.data.categories).to.be.an('array');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories?page=1&limit=10",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories"
-											],
-											"query": [
-												{
-													"key": "page",
-													"value": "1"
-												},
-												{
-													"key": "limit",
-													"value": "10"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Categories retrieved successfully\",\n    \"data\": {\n        \"categories\": [\n            {\n                \"id\": 1,\n                \"name\": \"Electronics\",\n                \"slug\": \"electronics\",\n                \"created_at\": \"2024-01-15 10:30:00\",\n                \"updated_at\": \"2024-01-15 10:30:00\"\n            },\n            {\n                \"id\": 2,\n                \"name\": \"Clothing\",\n                \"slug\": \"clothing\",\n                \"created_at\": \"2024-01-15 11:00:00\",\n                \"updated_at\": \"2024-01-15 11:00:00\"\n            }\n        ],\n        \"total\": 2,\n        \"page\": 1,\n        \"limit\": 10\n    }\n}"
-								},
-								{
-									"name": "Forbidden - Not Admin",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories"
-											]
-										}
-									},
-									"status": "Forbidden",
-									"code": 403,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get Category by ID",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/categories/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"categories",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengambil category berdasarkan ID (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has category data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('slug');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Category retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Electronics\",\n        \"slug\": \"electronics\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-								},
-								{
-									"name": "Category Not Found",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"999"
-											]
-										}
-									},
-									"status": "Not Found",
-									"code": 404,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"category_not_found\",\n    \"message\": \"category not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"invalid_id\",\n    \"message\": \"Invalid category ID\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Update Category",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"Electronics & Gadgets\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/categories/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"categories",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengupdate category (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has updated category data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('slug');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Electronics & Gadgets\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Category updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Electronics & Gadgets\",\n        \"slug\": \"electronics-gadgets\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 12:00:00\"\n    }\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"A\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"1"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'UpdateCategoryRequest.Name' Error:Field validation for 'Name' failed on the 'min' tag\"\n}"
-								},
-								{
-									"name": "Category Not Found",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Updated Category\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"999"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"update_failed\",\n    \"message\": \"category not found\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Delete Category",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/categories/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"categories",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk menghapus category (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response data is null', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.be.null;",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Category deleted successfully\",\n    \"data\": null\n}"
-								},
-								{
-									"name": "Category Not Found",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"999"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"delete_failed\",\n    \"message\": \"category not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/categories/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"categories",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"invalid_id\",\n    \"message\": \"Invalid category ID\"\n}"
-								}
-							]
-						}
-					],
-					"description": "Category management endpoints (memerlukan admin role)"
-				},
-				{
-					"name": "Product Management",
-					"item": [
-						{
-							"name": "Create Product",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "formdata",
-									"formdata": [
-										{
-											"key": "name",
-											"value": "iPhone 15 Pro",
-											"type": "text"
-										},
-										{
-											"key": "description",
-											"value": "Latest iPhone with advanced camera system",
-											"type": "text"
-										},
-										{
-											"key": "purchase_price",
-											"value": "8000000",
-											"type": "text"
-										},
-										{
-											"key": "selling_price",
-											"value": "12000000",
-											"type": "text"
-										},
-										{
-											"key": "stock",
-											"value": "50",
-											"type": "text"
-										},
-										{
-											"key": "category_id",
-											"value": "1",
-											"type": "text"
-										},
-										{
-											"key": "image",
-											"type": "file",
-											"src": []
-										}
-									]
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products"
-									]
-								},
-								"description": "Endpoint untuk membuat product baru (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 201', function () {",
-											"    pm.response.to.have.status(201);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has product data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('description');",
-											"    pm.expect(responseJson.data).to.have.property('purchase_price');",
-											"    pm.expect(responseJson.data).to.have.property('selling_price');",
-											"    pm.expect(responseJson.data).to.have.property('stock');",
-											"    pm.expect(responseJson.data).to.have.property('category_id');",
-											"    pm.expect(responseJson.data).to.have.property('category_name');",
-											"    pm.expect(responseJson.data).to.have.property('image_url');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "formdata",
-											"formdata": [
-												{
-													"key": "name",
-													"value": "iPhone 15 Pro",
-													"type": "text"
-												},
-												{
-													"key": "description",
-													"value": "Latest iPhone with advanced camera system",
-													"type": "text"
-												},
-												{
-													"key": "purchase_price",
-													"value": "8000000",
-													"type": "text"
-												},
-												{
-													"key": "selling_price",
-													"value": "12000000",
-													"type": "text"
-												},
-												{
-													"key": "stock",
-													"value": "50",
-													"type": "text"
-												},
-												{
-													"key": "category_id",
-													"value": "1",
-													"type": "text"
-												}
-											]
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products"
-											]
-										}
-									},
-									"status": "Created",
-									"code": 201,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Product created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"iPhone 15 Pro\",\n        \"description\": \"Latest iPhone with advanced camera system\",\n        \"purchase_price\": 8000000,\n        \"selling_price\": 12000000,\n        \"stock\": 50,\n        \"category_id\": 1,\n        \"category_name\": \"Electronics\",\n        \"image_url\": \"/uploads/products/iphone15pro.jpg\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "formdata",
-											"formdata": [
-												{
-													"key": "name",
-													"value": "A",
-													"type": "text"
-												},
-												{
-													"key": "purchase_price",
-													"value": "1000000",
-													"type": "text"
-												},
-												{
-													"key": "selling_price",
-													"value": "500000",
-													"type": "text"
-												},
-												{
-													"key": "category_id",
-													"value": "1",
-													"type": "text"
-												}
-											]
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"selling price must be greater than purchase price\"\n}"
-								},
-								{
-									"name": "Forbidden - Not Admin",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "formdata",
-											"formdata": [
-												{
-													"key": "name",
-													"value": "iPhone 15 Pro",
-													"type": "text"
-												},
-												{
-													"key": "purchase_price",
-													"value": "8000000",
-													"type": "text"
-												},
-												{
-													"key": "selling_price",
-													"value": "12000000",
-													"type": "text"
-												},
-												{
-													"key": "category_id",
-													"value": "1",
-													"type": "text"
-												}
-											]
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products"
-											]
-										}
-									},
-									"status": "Forbidden",
-									"code": 403,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get All Products",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products?page=1&limit=10",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "limit",
-											"value": "10"
-										}
-									]
-								},
-								"description": "Endpoint untuk mengambil semua products dengan pagination (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has products data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('products');",
-											"    pm.expect(responseJson).to.have.property('total');",
-											"    pm.expect(responseJson).to.have.property('page');",
-											"    pm.expect(responseJson).to.have.property('limit');",
-											"    pm.expect(responseJson.products).to.be.an('array');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products?page=1&limit=10",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products"
-											],
-											"query": [
-												{
-													"key": "page",
-													"value": "1"
-												},
-												{
-													"key": "limit",
-													"value": "10"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"products\": [\n        {\n            \"id\": 1,\n            \"name\": \"iPhone 15 Pro\",\n            \"description\": \"Latest iPhone with advanced camera system\",\n            \"purchase_price\": 8000000,\n            \"selling_price\": 12000000,\n            \"stock\": 50,\n            \"category_id\": 1,\n            \"category_name\": \"Electronics\",\n            \"image_url\": \"/uploads/products/iphone15pro.jpg\",\n            \"created_at\": \"2024-01-15 10:30:00\",\n            \"updated_at\": \"2024-01-15 10:30:00\"\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Samsung Galaxy S24\",\n            \"description\": \"Premium Android smartphone\",\n            \"purchase_price\": 7000000,\n            \"selling_price\": 10000000,\n            \"stock\": 30,\n            \"category_id\": 1,\n            \"category_name\": \"Electronics\",\n            \"image_url\": \"/uploads/products/samsung-s24.jpg\",\n            \"created_at\": \"2024-01-15 11:00:00\",\n            \"updated_at\": \"2024-01-15 11:00:00\"\n        }\n    ],\n    \"total\": 2,\n    \"page\": 1,\n    \"limit\": 10\n}"
-								},
-								{
-									"name": "Forbidden - Not Admin",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products"
-											]
-										}
-									},
-									"status": "Forbidden",
-									"code": 403,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get Product by ID",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengambil product berdasarkan ID (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has product data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('id');",
-											"    pm.expect(responseJson).to.have.property('name');",
-											"    pm.expect(responseJson).to.have.property('description');",
-											"    pm.expect(responseJson).to.have.property('purchase_price');",
-											"    pm.expect(responseJson).to.have.property('selling_price');",
-											"    pm.expect(responseJson).to.have.property('stock');",
-											"    pm.expect(responseJson).to.have.property('category_id');",
-											"    pm.expect(responseJson).to.have.property('category_name');",
-											"    pm.expect(responseJson).to.have.property('image_url');",
-											"    pm.expect(responseJson).to.have.property('created_at');",
-											"    pm.expect(responseJson).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"id\": 1,\n    \"name\": \"iPhone 15 Pro\",\n    \"description\": \"Latest iPhone with advanced camera system\",\n    \"purchase_price\": 8000000,\n    \"selling_price\": 12000000,\n    \"stock\": 50,\n    \"category_id\": 1,\n    \"category_name\": \"Electronics\",\n    \"image_url\": \"/uploads/products/iphone15pro.jpg\",\n    \"created_at\": \"2024-01-15 10:30:00\",\n    \"updated_at\": \"2024-01-15 10:30:00\"\n}"
-								},
-								{
-									"name": "Product Not Found",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"999"
-											]
-										}
-									},
-									"status": "Not Found",
-									"code": 404,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Product not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Invalid product ID\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Update Product",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"iPhone 15 Pro Max\",\n    \"description\": \"Latest iPhone with advanced camera system and larger display\",\n    \"purchase_price\": 8500000,\n    \"selling_price\": 13000000,\n    \"stock\": 45,\n    \"category_id\": 1\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengupdate product (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has updated product data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('id');",
-											"    pm.expect(responseJson).to.have.property('name');",
-											"    pm.expect(responseJson).to.have.property('description');",
-											"    pm.expect(responseJson).to.have.property('purchase_price');",
-											"    pm.expect(responseJson).to.have.property('selling_price');",
-											"    pm.expect(responseJson).to.have.property('stock');",
-											"    pm.expect(responseJson).to.have.property('category_id');",
-											"    pm.expect(responseJson).to.have.property('category_name');",
-											"    pm.expect(responseJson).to.have.property('image_url');",
-											"    pm.expect(responseJson).to.have.property('created_at');",
-											"    pm.expect(responseJson).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"iPhone 15 Pro Max\",\n    \"description\": \"Latest iPhone with advanced camera system and larger display\",\n    \"purchase_price\": 8500000,\n    \"selling_price\": 13000000,\n    \"stock\": 45,\n    \"category_id\": 1\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"id\": 1,\n    \"name\": \"iPhone 15 Pro Max\",\n    \"description\": \"Latest iPhone with advanced camera system and larger display\",\n    \"purchase_price\": 8500000,\n    \"selling_price\": 13000000,\n    \"stock\": 45,\n    \"category_id\": 1,\n    \"category_name\": \"Electronics\",\n    \"image_url\": \"/uploads/products/iphone15pro.jpg\",\n    \"created_at\": \"2024-01-15 10:30:00\",\n    \"updated_at\": \"2024-01-15 12:00:00\"\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"A\",\n    \"purchase_price\": 1000000,\n    \"selling_price\": 500000,\n    \"category_id\": 1\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"1"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"selling price must be greater than purchase price\"\n}"
-								},
-								{
-									"name": "Product Not Found",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Updated Product\",\n    \"purchase_price\": 1000000,\n    \"selling_price\": 1500000,\n    \"category_id\": 1\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"999"
-											]
-										}
-									},
-									"status": "Not Found",
-									"code": 404,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Product not found\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Delete Product",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk menghapus product (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Product deleted successfully\"\n}"
-								},
-								{
-									"name": "Product Not Found",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"999"
-											]
-										}
-									},
-									"status": "Not Found",
-									"code": 404,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Product not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Invalid product ID\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get Products by Category",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/products/categories/1?page=1&limit=10",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"products",
-										"categories",
-										"1"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "limit",
-											"value": "10"
-										}
-									]
-								},
-								"description": "Endpoint untuk mengambil products berdasarkan category ID dengan pagination (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has products data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('products');",
-											"    pm.expect(responseJson).to.have.property('total');",
-											"    pm.expect(responseJson).to.have.property('page');",
-											"    pm.expect(responseJson).to.have.property('limit');",
-											"    pm.expect(responseJson.products).to.be.an('array');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/categories/1?page=1&limit=10",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"categories",
-												"1"
-											],
-											"query": [
-												{
-													"key": "page",
-													"value": "1"
-												},
-												{
-													"key": "limit",
-													"value": "10"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"products\": [\n        {\n            \"id\": 1,\n            \"name\": \"iPhone 15 Pro\",\n            \"description\": \"Latest iPhone with advanced camera system\",\n            \"purchase_price\": 8000000,\n            \"selling_price\": 12000000,\n            \"stock\": 50,\n            \"category_id\": 1,\n            \"category_name\": \"Electronics\",\n            \"image_url\": \"/uploads/products/iphone15pro.jpg\",\n            \"created_at\": \"2024-01-15 10:30:00\",\n            \"updated_at\": \"2024-01-15 10:30:00\"\n        },\n        {\n            \"id\": 2,\n            \"name\": \"Samsung Galaxy S24\",\n            \"description\": \"Premium Android smartphone\",\n            \"purchase_price\": 7000000,\n            \"selling_price\": 10000000,\n            \"stock\": 30,\n            \"category_id\": 1,\n            \"category_name\": \"Electronics\",\n            \"image_url\": \"/uploads/products/samsung-s24.jpg\",\n            \"created_at\": \"2024-01-15 11:00:00\",\n            \"updated_at\": \"2024-01-15 11:00:00\"\n        }\n    ],\n    \"total\": 2,\n    \"page\": 1,\n    \"limit\": 10\n}"
-								},
-								{
-									"name": "Invalid Category ID",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/products/categories/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"products",
-												"categories",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"Invalid category ID\"\n}"
-								}
-							]
-						}
-					],
-					"description": "Product management endpoints (memerlukan admin role)"
-				},
-				{
-					"name": "User Management",
-					"item": [
-						{
-							"name": "Create User",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"customer\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/user-management",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"user-management"
-									]
-								},
-								"description": "Endpoint untuk membuat user baru (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 201', function () {",
-											"    pm.response.to.have.status(201);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has user data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('email');",
-											"    pm.expect(responseJson.data).to.have.property('role');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"customer\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management"
-											]
-										}
-									},
-									"status": "Created",
-									"code": 201,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"User created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"role\": \"customer\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Jo\",\n    \"email\": \"invalid-email\",\n    \"password\": \"123\",\n    \"role\": \"invalid\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'CreateUserRequest.Name' Error:Field validation for 'Name' failed on the 'min' tag\"\n}"
-								},
-								{
-									"name": "Email Already Exists",
-									"originalRequest": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"role\": \"customer\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"create_user_failed\",\n    \"message\": \"email already exists\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get All Users",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/user-management?page=1&limit=10",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"user-management"
-									],
-									"query": [
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "limit",
-											"value": "10"
-										}
-									]
-								},
-								"description": "Endpoint untuk mengambil semua users dengan pagination (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has users data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('users');",
-											"    pm.expect(responseJson.data).to.have.property('total');",
-											"    pm.expect(responseJson.data).to.have.property('page');",
-											"    pm.expect(responseJson.data).to.have.property('limit');",
-											"    pm.expect(responseJson.data.users).to.be.an('array');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management?page=1&limit=10",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management"
-											],
-											"query": [
-												{
-													"key": "page",
-													"value": "1"
-												},
-												{
-													"key": "limit",
-													"value": "10"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"Users retrieved successfully\",\n    \"data\": {\n        \"users\": [\n            {\n                \"id\": 1,\n                \"name\": \"John Doe\",\n                \"email\": \"john.doe@example.com\",\n                \"role\": \"customer\",\n                \"created_at\": \"2024-01-15 10:30:00\",\n                \"updated_at\": \"2024-01-15 10:30:00\"\n            },\n            {\n                \"id\": 2,\n                \"name\": \"Jane Smith\",\n                \"email\": \"jane.smith@example.com\",\n                \"role\": \"admin\",\n                \"created_at\": \"2024-01-15 11:00:00\",\n                \"updated_at\": \"2024-01-15 11:00:00\"\n            }\n        ],\n        \"total\": 2,\n        \"page\": 1,\n        \"limit\": 10\n    }\n}"
-								},
-								{
-									"name": "Forbidden - Not Admin",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management"
-											]
-										}
-									},
-									"status": "Forbidden",
-									"code": 403,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"forbidden\",\n    \"message\": \"Admin access required\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Get User by ID",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/user-management/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"user-management",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengambil user berdasarkan ID (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has user data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('email');",
-											"    pm.expect(responseJson.data).to.have.property('role');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"User retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"role\": \"customer\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 10:30:00\"\n    }\n}"
-								},
-								{
-									"name": "User Not Found",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"999"
-											]
-										}
-									},
-									"status": "Not Found",
-									"code": 404,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"user_not_found\",\n    \"message\": \"user not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"invalid_id\",\n    \"message\": \"Invalid user ID\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Update User",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"name\": \"John Doe Updated\",\n    \"email\": \"john.updated@example.com\",\n    \"role\": \"admin\"\n}"
-								},
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/user-management/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"user-management",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk mengupdate user (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response has updated user data', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.have.property('id');",
-											"    pm.expect(responseJson.data).to.have.property('name');",
-											"    pm.expect(responseJson.data).to.have.property('email');",
-											"    pm.expect(responseJson.data).to.have.property('role');",
-											"    pm.expect(responseJson.data).to.have.property('created_at');",
-											"    pm.expect(responseJson.data).to.have.property('updated_at');",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"John Doe Updated\",\n    \"email\": \"john.updated@example.com\",\n    \"role\": \"admin\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"User updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"John Doe Updated\",\n        \"email\": \"john.updated@example.com\",\n        \"role\": \"admin\",\n        \"created_at\": \"2024-01-15 10:30:00\",\n        \"updated_at\": \"2024-01-15 12:00:00\"\n    }\n}"
-								},
-								{
-									"name": "Validation Error",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Jo\",\n    \"email\": \"invalid-email\",\n    \"role\": \"invalid\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"1"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"validation_error\",\n    \"message\": \"Key: 'UpdateUserRequest.Name' Error:Field validation for 'Name' failed on the 'min' tag\"\n}"
-								},
-								{
-									"name": "User Not Found",
-									"originalRequest": {
-										"method": "PUT",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json"
-											},
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n    \"name\": \"Updated User\",\n    \"email\": \"updated@example.com\",\n    \"role\": \"customer\"\n}"
-										},
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"999"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"update_user_failed\",\n    \"message\": \"user not found\"\n}"
-								}
-							]
-						},
-						{
-							"name": "Delete User",
-							"request": {
-								"method": "DELETE",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{auth_token}}"
-									}
-								],
-								"url": {
-									"raw": "{{base_url}}/api/v1/admin/user-management/1",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"api",
-										"v1",
-										"admin",
-										"user-management",
-										"1"
-									]
-								},
-								"description": "Endpoint untuk menghapus user (memerlukan admin role)"
-							},
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"type": "text/javascript",
-										"exec": [
-											"pm.test('Status code is 200', function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test('Response has message', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson).to.have.property('message');",
-											"});",
-											"",
-											"pm.test('Response data is null', function () {",
-											"    const responseJson = pm.response.json();",
-											"    pm.expect(responseJson.data).to.be.null;",
-											"});"
-										]
-									}
-								}
-							],
-							"response": [
-								{
-									"name": "Success Response",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/1",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"1"
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"message\": \"User deleted successfully\",\n    \"data\": null\n}"
-								},
-								{
-									"name": "User Not Found",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/999",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"999"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"delete_user_failed\",\n    \"message\": \"user not found\"\n}"
-								},
-								{
-									"name": "Invalid ID",
-									"originalRequest": {
-										"method": "DELETE",
-										"header": [
-											{
-												"key": "Authorization",
-												"value": "Bearer {{auth_token}}"
-											}
-										],
-										"url": {
-											"raw": "{{base_url}}/api/v1/admin/user-management/invalid",
-											"host": [
-												"{{base_url}}"
-											],
-											"path": [
-												"api",
-												"v1",
-												"admin",
-												"user-management",
-												"invalid"
-											]
-										}
-									},
-									"status": "Bad Request",
-									"code": 400,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "Content-Type",
-											"value": "application/json"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"error\": \"invalid_id\",\n    \"message\": \"Invalid user ID\"\n}"
-								}
-							]
-						}
-					],
-					"description": "User management endpoints (memerlukan admin role)"
+					}
 				}
-			],
-			"description": "Admin endpoints (memerlukan admin role)"
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
+			]
 		},
 		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"// Auto-save auth token from login response",
-					"if (pm.response.code === 200 && pm.request.url.path.includes('login')) {",
-					"    const responseJson = pm.response.json();",
-					"    if (responseJson.data && responseJson.data.token) {",
-					"        pm.collectionVariables.set('auth_token', responseJson.data.token);",
-					"        console.log('Auth token saved to collection variable');",
-					"    }",
-					"}"
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:8080",
-			"type": "string"
+			"name": "👑 Admin - Categories",
+			"item": [
+				{
+					"name": "Create Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Electronics\",\n    \"description\": \"Electronic devices and gadgets\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get All Categories (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get Category by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "categories", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Electronics Updated\",\n    \"description\": \"Updated description for electronic devices\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "categories", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "categories", "1"]
+						}
+					}
+				}
+			]
 		},
 		{
-			"key": "auth_token",
-			"value": "",
-			"type": "string"
+			"name": "👑 Admin - Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "iPhone 15 Pro",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Latest iPhone with advanced features",
+									"type": "text"
+								},
+								{
+									"key": "purchase_price",
+									"value": "8000000",
+									"type": "text"
+								},
+								{
+									"key": "selling_price",
+									"value": "12000000",
+									"type": "text"
+								},
+								{
+									"key": "stock",
+									"value": "50",
+									"type": "text"
+								},
+								{
+									"key": "category_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products"]
+						}
+					}
+				},
+				{
+					"name": "Get All Products (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Product by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"iPhone 15 Pro Max\",\n    \"description\": \"Updated description\",\n    \"purchase_price\": 8500000,\n    \"selling_price\": 13000000,\n    \"stock\": 30,\n    \"category_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Products by Category (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/products/categories/1?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "products", "categories", "1"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👑 Admin - User Management",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"password\": \"admin123\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/user-management",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "user-management"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/user-management?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "user-management"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/user-management/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "user-management", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated User Name\",\n    \"email\": \"updated@example.com\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/user-management/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "user-management", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/user-management/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "user-management", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👑 Admin - Transactions",
+			"item": [
+				{
+					"name": "Get All Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/transactions?page=1&limit=10&status=pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "transactions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "pending"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/transactions/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "transactions", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Transaction Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"paid\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/admin/transactions/1/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "admin", "transactions", "1", "status"]
+						}
+					}
+				}
+			]
 		}
 	]
 }

@@ -223,3 +223,81 @@ func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, products)
 }
+
+// GetAllProductsPublic godoc
+// @Summary Get all products (Public)
+// @Description Get all products with pagination (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.PublicProductListResponse
+// @Router /api/v1/public/products [get]
+func (h *ProductHandler) GetAllProductsPublic(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	products, err := h.productService.GetAllProductsPublic(page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}
+
+// GetProductByIDPublic godoc
+// @Summary Get product by ID (Public)
+// @Description Get a specific product by ID (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} responses.PublicProductResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/public/products/{id} [get]
+func (h *ProductHandler) GetProductByIDPublic(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+
+	product, err := h.productService.GetProductByIDPublic(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
+
+// GetProductsByCategoryPublic godoc
+// @Summary Get products by category (Public)
+// @Description Get products by category ID with pagination (Public access - no authentication required)
+// @Tags Public Products
+// @Produce json
+// @Param category_id path int true "Category ID"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} responses.PublicProductListResponse
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/public/products/categories/{category_id} [get]
+func (h *ProductHandler) GetProductsByCategoryPublic(c *gin.Context) {
+	categoryID, err := strconv.ParseUint(c.Param("category_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	products, err := h.productService.GetProductsByCategoryPublic(uint(categoryID), page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}

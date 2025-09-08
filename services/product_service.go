@@ -151,3 +151,60 @@ func (s *ProductService) GetProductsByCategory(categoryID uint, page, limit int)
 		Limit:    limit,
 	}, nil
 }
+
+// Public methods (tanpa purchase_price)
+func (s *ProductService) GetAllProductsPublic(page, limit int) (*responses.PublicProductListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	products, total, err := s.productRepo.GetAll(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	productResponses := responses.ConvertProductsToPublicResponse(products)
+
+	return &responses.PublicProductListResponse{
+		Products: productResponses,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
+	}, nil
+}
+
+func (s *ProductService) GetProductByIDPublic(id uint) (*responses.PublicProductResponse, error) {
+	product, err := s.productRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	response := responses.ConvertProductToPublicResponse(*product)
+	return &response, nil
+}
+
+func (s *ProductService) GetProductsByCategoryPublic(categoryID uint, page, limit int) (*responses.PublicProductListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	products, total, err := s.productRepo.GetByCategoryID(categoryID, page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	productResponses := responses.ConvertProductsToPublicResponse(products)
+
+	return &responses.PublicProductListResponse{
+		Products: productResponses,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
+	}, nil
+}

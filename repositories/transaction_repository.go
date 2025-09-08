@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"tokogo/config"
 	"tokogo/models"
 
 	"gorm.io/gorm"
@@ -12,9 +11,9 @@ type TransactionRepository struct {
 }
 
 // NewTransactionRepository membuat instance baru TransactionRepository
-func NewTransactionRepository() *TransactionRepository {
+func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 	return &TransactionRepository{
-		db: config.DB,
+		db: db,
 	}
 }
 
@@ -65,4 +64,36 @@ func (r *TransactionRepository) UpdateTransactionStatus(id uint, status string) 
 		return err
 	}
 	return nil
+}
+
+// Create membuat transaksi baru
+func (r *TransactionRepository) Create(transaction *models.Transaction) error {
+	return r.db.Create(transaction).Error
+}
+
+// Update mengupdate transaksi
+func (r *TransactionRepository) Update(transaction *models.Transaction) error {
+	return r.db.Save(transaction).Error
+}
+
+// GetByID mengambil transaksi berdasarkan ID
+func (r *TransactionRepository) GetByID(id uint) (*models.Transaction, error) {
+	var transaction models.Transaction
+	err := r.db.Preload("User").Preload("TransactionDetails.Product").First(&transaction, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &transaction, nil
+}
+
+// GetByUserID mengambil transaksi berdasarkan User ID
+func (r *TransactionRepository) GetByUserID(userID uint) ([]models.Transaction, error) {
+	var transactions []models.Transaction
+	err := r.db.Preload("User").Preload("TransactionDetails.Product").Where("user_id = ?", userID).Order("created_at DESC").Find(&transactions).Error
+	return transactions, err
+}
+
+// CreateTransactionDetail membuat detail transaksi baru
+func (r *TransactionRepository) CreateTransactionDetail(detail *models.TransactionDetail) error {
+	return r.db.Create(detail).Error
 }
