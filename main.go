@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 	"tokogo/config"
 	"tokogo/handlers"
 	"tokogo/middlewares"
@@ -156,6 +157,15 @@ func main() {
 			}
 		}
 	}
+
+	// Health check endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":    "healthy",
+			"timestamp": time.Now().Unix(),
+			"version":   "1.0.0",
+		})
+	})
 
 	// Start server
 	port := config.GetEnv("SERVER_PORT", "8080")
